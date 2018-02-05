@@ -58,7 +58,7 @@ def Insert_OrderBuy(UUID, Exchange, Time, Coin_Market, Quantity, Rate, Status):
     except:
         return "Failed"
 
-
+#OrDer_Sell
 def Insert_OrderSale(UUID, Exchange, Time, Coin_Market, Quantity, Rate, Status):
     try:
         con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
@@ -175,7 +175,7 @@ def Get_Nsell(Exchange, Coin):
 
 
 
-##Ckloss
+##Ckloss BTS,STS
 
 def Insert_ckloss(UUID, Exchange, Stoploss, Cutloss, StoplossPoint):
     try:
@@ -189,8 +189,6 @@ def Insert_ckloss(UUID, Exchange, Stoploss, Cutloss, StoplossPoint):
     except:
         return "Failed"
 
-
-#
 def Update_StopLoss(UUID, Exchange, Stoploss):
     try:
         con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
@@ -227,6 +225,57 @@ def Update_Stoppoint(UUID, Exchange, StoplossPoint):
     except:
         return "Failed"
 
+################
+## CkstopBuy ##
+
+def Insert_ckstopbuy(UUID, Exchange, StopRisk, StopBuy, StopBuyPoint):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "INSERT INTO  `ckstopbuy` (`UUID`,`Exchange`,`StopRisk`,`StopBuy`,`StopBuyPoint`) VALUES (%s,%s,%s,%s,%s)"
+        cursor.execute(sql, (UUID, Exchange, StopRisk, StopBuy, StopBuyPoint))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+
+def Update_StopRisk(UUID, Exchange, StopRisk):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "UPDATE ckstopbuy SET StopRisk=%s WHERE UUID=%s AND Exchange=%s "
+        cursor.execute(sql, (StopRisk, UUID, Exchange))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+
+def Update_StopBuy(UUID, Exchange, StopBuy):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "UPDATE ckstopbuy SET StopBuy=%s WHERE UUID=%s AND Exchange=%s "
+        cursor.execute(sql, (StopBuy, UUID, Exchange))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+
+def Update_StopBuyPoint(UUID, Exchange, StopBuyPoint):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "UPDATE ckstopbuy SET StopBuyPoint=%s WHERE UUID=%s AND Exchange=%s "
+        cursor.execute(sql, (StopBuyPoint, UUID, Exchange))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+############
 
 def Get_BittrexOrder_buy(UUID, Exchange, table, col):
     try:

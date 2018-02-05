@@ -190,61 +190,61 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
 
 
 ## Find price deep dows ## Find proce low and Buy
-def buy_cutloss_shadow(UUID, Exchange, LastPrice,StartRate):
-    StopLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Stoploss')
-    CutLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Cutloss')
+def buy_StopBuy_shadow(UUID, Exchange, LastPrice,StartRate):
+    StopRisk = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopRisk')
+    StopBuy = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopBuy')
     print("--------------------------")
-    print('Start Bot cutloss CTS ..')
+    print('Start Bot StopBuy STB ..')
     print('1.StartRate=>' + str(StartRate))
-    print('2.StopLossShaDow=>' + str(StopLoss))
-    print('3.CutLossShaDow=>' + str(CutLoss))
+    print('2.StopRisk(UP)=>' + str(StopRisk))
+    print('3.StopBuy(DOWN)=>' + str(StopBuy))
     print('4.LastPrice=>' + str(LastPrice))
-    StopLossPrice = (StartRate + (StartRate * (StopLoss / 100)))
-    print('5.StopLossPrice=>' + str(StopLossPrice))
+    StopRiskPrice = (StartRate + (StartRate * (StopRisk / 100)))
+    print('5.StopRisk=>' + str(StopRiskPrice))
     print("StartRate =>" + str(StartRate) + " Price Down =>" + str(LastPrice - StartRate) + " (+/-) =>" + str((100 * (LastPrice - StartRate)) / StartRate) + "%")
     print("--------------------------")
     ## Price DOWN ##
     if LastPrice < StartRate:
-        if CutLoss != "" or CutLoss != 0:
-            CutLoss_Point_bf = Get_BittrexDB(UUID, Exchange, 'ckloss', 'StoplossPoint') ## Stop loss before
-            if CutLoss_Point_bf == 0:
-               CutLoss_Point_bf = 1000000
+        if StopBuy != "" or StopBuy != 0:
+            StopBuy_Point_bf = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopBuyPoint') ## Stop loss before
+            if StopBuy_Point_bf == 0:
+               StopBuy_Point_bf = 1000000
 
-            CutLoss_Point = LastPrice + (LastPrice * (CutLoss / 100))  ## current cutloss
-            print('CurLoss_Point=' + str(CutLoss_Point))
-            print('CutLoss_Point_Action=' + str(CutLoss_Point_bf))
-            if LastPrice < CutLoss_Point_bf:  ## Price is Down
+            StopBuy_Point = LastPrice + (LastPrice * (StopBuy / 100))  ## current cutloss
+            print('StopBuy_Point=' + str(StopBuy_Point))
+            print('StopBuy_Point_Action=' + str(StopBuy_Point_bf))
+            if LastPrice < StopBuy_Point_bf:  ## Price is Down
                 #print('StopLoss_Point2=' + str(StopLoss_Point_bf))
-                if CutLoss_Point >= StartRate:
-                    print("Cut loss more than buyer update Cut Loss = 0")
-                    Update_Stoppoint(UUID, Exchange, '0')
+                if StopBuy_Point >= StartRate:
+                    print("StopBuy Up than buyer update StopBuy = 0")
+                    Update_StopBuyPoint(UUID, Exchange, '0')
                     #return ('StopLossUpdate',0)
 
-                if CutLoss_Point < StartRate and CutLoss_Point < CutLoss_Point_bf:
-                    print('Update Cut Loss !! =' + str(CutLoss_Point) +" to new value")
-                    CK = Update_Stoppoint(UUID, Exchange, CutLoss_Point)
+                if StopBuy_Point < StartRate and StopBuy_Point < StopBuy_Point_bf:
+                    print('Update StopBuy !! =' + str(StopBuy_Point) +" to new value")
+                    CK = Update_StopBuyPoint(UUID, Exchange, StopBuy_Point)
                     if CK == "OK":
-                        print('Update_CutLoss new point=' + str(CutLoss_Point) +" => Completed")
-                        CutLoss_Point_bf = CutLoss_Point
+                        print('Update Price Down to new point=' + str(StopBuy_Point) +" => Completed")
+                        StopBuy_Point_bf = StopBuy_Point
                         #number_point+=1
-                        return ('CutLossUpdate',CutLoss_Point_bf,CutLoss)
-                elif CutLoss_Point < StartRate and CutLoss_Point >= CutLoss_Point_bf:
-                    print("Wait Price more than Last CutLoss Point Action")
-                    print("CutLoss Point Action is "+str(CutLoss_Point_bf))
+                        return ('StopBuyUpdate',StopBuy_Point_bf,StopBuy)
+                elif StopBuy_Point < StartRate and StopBuy_Point >= StopBuy_Point_bf:
+                    print("Wait Price Up than Last StopBuy Point Action")
+                    print("StopBuy Point Action is "+str(StopBuy_Point_bf))
                     #return ('StopLoss Action Update', StopLoss_Point_bf)
             # if StopLoss_Point > BuyRate and LastPrice <= StopLoss_Point2:
-            if LastPrice >= CutLoss_Point_bf:
-                print("Buy coin because last price more than Cut loss point => "+str(CutLoss_Point_bf)+"")
-                return ('CutLoss', LastPrice,CutLoss)
+            if LastPrice >= StopBuy_Point_bf:
+                print("Buy coin because last price up than Stop Buy Point => "+str(StopBuy_Point_bf)+"")
+                return ('StopBuy', LastPrice,StopBuy)  ### Stop and Buy coin Now !!!
     elif LastPrice == StartRate:
-        Update_Stoppoint(UUID, Exchange, '0')
-        CutLoss_Point = LastPrice - (LastPrice * (CutLoss / 100))
+        Update_StopBuyPoint(UUID, Exchange, '0')
+        CutLoss_Point = LastPrice - (LastPrice * (StopBuy / 100))
     elif LastPrice > StartRate:
         if StartRate != "failed":
-            StopLossPrice = (StartRate + (StartRate * (StopLoss / 100)))
-            print('StopLoss Price to Price =>' + str(StopLossPrice))
+            StopLossPrice = (StartRate + (StartRate * (StopRisk / 100)))
+            print('StopRisk Price =>' + str(StopLossPrice))
         if StopLossPrice <= LastPrice:
-            return ('StopLoss', StopLossPrice,StopLoss)
+            return ('StopRisk', StopLossPrice,StopRisk)   ### StopRisk becuase price is up
 
 
 
@@ -308,6 +308,11 @@ def buy_trailling_stop_custom_sim(UUID, Exchange, LastPrice,StopPoint):
 def format_float(f):
     return "%.5f" % f
 
+def format_floatc(f,num):
+    format="%."+str(num)+"f"
+    return format % f
+                     #% f
+
 
 def symbols(id):
     exchange = getattr(ccxt, id)({
@@ -351,12 +356,13 @@ def get_balance(id, coin):
     # Bal += ("Free:" + str(trading_balance['free'][bal]) + "\n")
     #       Bal += ("Used:" + str(trading_balance['used'][bal]) + "\n")
     #       CK=0
-    Bal += ("|= Balance =|\n")
+    #Bal += ("|= "+coin+" Balance =|\n")
     for bal in (get_positive_accounts(account_balance['total'])):
         if bal == coin:
-            Bal += (bal + ":" + str(account_balance['total'][bal]) + "\n")
-            Bal += ("Used:" + str(account_balance['used'][bal]) + "\n")
-            Bal += ("Free:" + str(account_balance['free'][bal]) + "\n")
+            Bal += (bal + ":" + str(format_floatc(account_balance['total'][bal],6)) + "\n")
+            Bal += ("Used:" + str(format_floatc(account_balance['used'][bal],6)) + "\n")
+            Bal += ("Free:" + str(format_floatc(account_balance['free'][bal],6)) + "\n")
+            Bal+="----------------\n"
 
             CK = 0
     if CK == 0:
@@ -761,12 +767,25 @@ def main():
         'apiKey': '8cdf0f0a666c',
         'secret': 'b6b22e1e51eb',
         "enableRateLimit": True,
-    })  # print(get_balance(bxin,'THB'))
+    })
+    #BXCOIN=['BCH/THB','BTC/THB','LTC/THB']
+    #INFO=""
+    #for coin in BXCOIN:
+    #     ST=get_balance(bxin,coin)
+    #     if ST==201:
+    #         continue
+    #     else:
+    #         INFO+=(ST)
+    #print(INFO)
+
+    #print(bxin.fe())
+
+
 
     while True:
-        #UUID, Exchange, LastPrice,StartRate
+    #   #UUID, Exchange, LastPrice,StartRate
         Lasprice=get_lastprice_sim('LTC/THB','bxinth')
-        ST=buy_cutloss_shadow('61423709','bxinth',Lasprice,8000)
+        ST=buy_StopBuy_shadow('86715032','bxinth',Lasprice,8000)
         print(ST)
         time.sleep(2)
 
