@@ -400,7 +400,6 @@ def sale_coin_sim(symbol, volumn, price, exchange):
         else:
             return (str("Sale " + symbol + " Failed error is" + Result['info']['error']))
 
-
 def sale_coin_res(symbol, volumn, price, exchange):
     number = ''.join(random.sample("0123456789", 8))
     print('Number of randome is ' + number)
@@ -421,7 +420,7 @@ def sale_coin_res(symbol, volumn, price, exchange):
         if Oid != 0 and Oid != None:
             Total = volumn * price
             ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), str(symbol), 'sell', price, volumn, Total,
-                                  'open', exchange)
+                                  'open', exchange,'sts')
             if ST == "OK":
                 return Oid
             else:
@@ -475,14 +474,31 @@ def sale_coin(id, symbol, volumn, price, exchange):
     except ccxt.ExchangeError as e:
         return (str(e) + 'Exchange Error')
 
-######################
-def buy_coin_sim(symbol, volumn, price, exchange):
+####### BSS Only
+def buy_coin_bss_sim(symbol, volumn, price, exchange):
         number = ''.join(random.sample("0123456789", 8))
         print('Number of randome is ' + number)
-            ## Insert Coin ####
+        ## Insert Coin ####
         UUID = str(number)
         print(UUID)
         Result = {'info': {'order_id': UUID, 'error': None, 'success': True}, 'id': UUID}
+        print(Result)
+        if Result['info']['success'] == True:
+            print("Buy " + symbol + " ID:" + str(Result['info']['order_id']) + "Price:" + str(\
+            price) + " Volumn:" + str(volumn) + " Quality:" + str(volumn / price))
+            Oid = Result['info']['order_id']
+            if Oid == 0:
+                number = ''.join(random.sample("0123456789", 7))
+                Oid = number
+            if Oid != 0 and Oid != None:
+               return Oid
+        else:
+            return (str("Buy " + symbol + " Failed error is" + Result['info']['error']))
+                # return 1
+
+def buy_coin_bss(id, symbol, volumn, price, exchange):
+    try:
+        Result = id.create_order(symbol, 'market', 'buy', volumn, price, {'leverage': 3})
         print(Result)
         if Result['info']['success'] == True:
             print("Buy " + symbol + " ID:" + str(Result['info']['order_id']) + "Price:" + str(price) + " Volumn:" + str(
@@ -492,14 +508,7 @@ def buy_coin_sim(symbol, volumn, price, exchange):
                 number = ''.join(random.sample("0123456789", 7))
                 Oid = number
             if Oid != 0 and Oid != None:
-                Total = volumn
-                Qty = volumn / price
-                ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), symbol, 'buy', price, Qty, Total, 'open',
-                                      exchange)
-                if ST == "OK":
-                    return Oid
-                else:
-                    return "Error,Insert Database open order failed"
+                return Oid
             else:
                 return Result['info']['error']
 
@@ -507,7 +516,86 @@ def buy_coin_sim(symbol, volumn, price, exchange):
             return (str("Buy " + symbol + " Failed error is" + Result['info']['error']))
             # return 1
 
-##########################
+
+    except ccxt.DDoSProtection as e:
+        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        return (str(e) + 'DDoS Protection (ignoring)')
+    except ccxt.RequestTimeout as e:
+        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        return (str(e) + 'Request Timeout (ignoring)')
+    except ccxt.ExchangeNotAvailable as e:
+        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
+    except ccxt.AuthenticationError as e:
+        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        return (str(e) + 'Authentication Error (missing API keys, ignoring)')
+    except ccxt.ExchangeError as e:
+        return (str(e) + 'Exchange Error')
+
+def buy_coin_res(symbol, volumn, price, exchange):
+    number = ''.join(random.sample("0123456789", 8))
+    print('Number of randome is ' + number)
+    ## Insert Coin ####
+    UUID = str(number)
+    print(UUID)
+    Result = {'info': {'order_id': UUID, 'error': None, 'success': True}, 'id': UUID}
+    print(Result)
+    if Result['info']['success'] == True:
+        print("Buy " + symbol + " ID:" + str(Result['info']['order_id']) + "Price:" + str(price) + " Volumn:" + str(
+            volumn) + " Quality:" + str(volumn / price))
+        Oid = Result['info']['order_id']
+        if Oid == 0:
+            number = ''.join(random.sample("0123456789", 7))
+            Oid = number
+        if Oid != 0 and Oid != None:
+            Total = volumn
+            Qty = volumn / price
+            ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), symbol, 'buy', price, Qty, Total, 'open',
+                                  exchange,'bss')
+            if ST == "OK":
+                return Oid
+            else:
+                return "Error,Insert Database open order failed"
+        else:
+            return Result['info']['error']
+
+    else:
+        return (str("Buy " + symbol + " Failed error is" + Result['info']['error']))
+        # return 1
+
+
+######### BTS Only ###
+def buy_coin_sim(symbol, volumn, price, exchange):
+    number = ''.join(random.sample("0123456789", 8))
+    print('Number of randome is ' + number)
+    ## Insert Coin ####
+    UUID = str(number)
+    print(UUID)
+    Result = {'info': {'order_id': UUID, 'error': None, 'success': True}, 'id': UUID}
+    print(Result)
+    if Result['info']['success'] == True:
+        print("Buy " + symbol + " ID:" + str(Result['info']['order_id']) + "Price:" + str(price) + " Volumn:" + str(
+            volumn) + " Quality:" + str(volumn / price))
+        Oid = Result['info']['order_id']
+        if Oid == 0:
+            number = ''.join(random.sample("0123456789", 7))
+            Oid = number
+        if Oid != 0 and Oid != None:
+            Total = volumn
+            Qty = volumn / price
+            ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), symbol, 'buy', price, Qty, Total, 'open',
+                                  exchange, 'bts')
+            if ST == "OK":
+                return Oid
+            else:
+                return "Error,Insert Database open order failed"
+        else:
+            return Result['info']['error']
+
+    else:
+        return (str("Buy " + symbol + " Failed error is" + Result['info']['error']))
+        # return 1
+
 def buy_coin(id, symbol, volumn, price, exchange):
     try:
         Result = id.create_order(symbol, 'market', 'buy', volumn, price, {'leverage': 3})
@@ -523,7 +611,7 @@ def buy_coin(id, symbol, volumn, price, exchange):
                 Total = volumn
                 Qty = volumn / price
                 ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), symbol, 'buy', price, Qty, Total, 'open',
-                                      exchange)
+                                      exchange,'bts')
                 if ST == "OK":
                     return Oid
                 else:

@@ -32,6 +32,18 @@ def Update_OrderBuy(UUID, Exchange, Status):
     except:
         return "Failed"
 
+def Update_OrderStopBuy(UUID, Exchange, Status):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "UPDATE order_stopbuy SET Status=%s WHERE UUID=%s AND Exchange=%s"
+        cursor.execute(sql, (Status, UUID, Exchange))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+
 def Update_OrderSale(UUID, Exchange, Status):
     try:
         con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
@@ -71,12 +83,36 @@ def Insert_OrderSale(UUID, Exchange, Time, Coin_Market, Quantity, Rate, Status):
     except:
         return "Failed"
 
-
+## Order StopBuy ##
+def Insert_OrderStopBuy(UUID, Exchange, Time, Coin_Market, Quantity, Rate, Status):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "INSERT INTO  `order_stopbuy` (`UUID`,`Time`,`Coin_Market`,`Quantity`,`Rate`,`Status`,`Exchange`) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+        cursor.execute(sql, (UUID, Time, Coin_Market, Quantity, Rate, Status, Exchange))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+####################
 def Get_OrderBuy(Exchange,Status): ## buy,sold status
     try:
         con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
         cursor = con.cursor()
         sql = "SELECT * FROM `order_buy` where `Status`=\""+Status+"\" and `Exchange`=\"" + Exchange + "\""
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        con.close()
+        return results
+    except:
+        return "failed"
+
+def Get_OrderStopBuy(Exchange,Status): ## buy,sold status
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "SELECT * FROM `order_stopbuy` where `Status`=\""+Status+"\" and `Exchange`=\"" + Exchange + "\""
         cursor.execute(sql)
         results = cursor.fetchall()
         con.close()
@@ -98,12 +134,12 @@ def Get_OrderSale(Exchange,Status): ## sell ,sold status
         return "failed"
 
 
-def Insert_OpenOrder(UUID,Time,Coin,Type,Rate,Qty,Total,Status,Exchange):
+def Insert_OpenOrder(UUID,Time,Coin,Type,Rate,Qty,Total,Status,Exchange,Strategy):
     try:
         con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
         cursor = con.cursor()
-        sql = "INSERT INTO  `open_older` (`UUID`,`Time`,`Coin`,`Type`,`Rate`,`Qty`,`Total`,`Status`,`Exchange`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-        cursor.execute(sql, (UUID, Time, Coin, Type, Rate, Qty,Total, Status, Exchange))
+        sql = "INSERT INTO  `open_older` (`UUID`,`Time`,`Coin`,`Type`,`Rate`,`Qty`,`Total`,`Status`,`Exchange`,`Strategy`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        cursor.execute(sql, (UUID, Time, Coin, Type, Rate, Qty,Total, Status, Exchange,Strategy))
         con.commit()
         con.close()
         return "OK"
@@ -464,6 +500,17 @@ def is_number(s):
     except (TypeError, ValueError):
         pass
     return False
+
+def insert_orderbuy_test(Exchange,Coin,Oty,Rate,Status):
+    count = 0
+    number = ''.join(random.sample("0123456789", 4))
+    print('Number of randome is ' + number)
+    ## Insert Coin ####
+    UUID = str(number) + '425861b8' + str(number)
+    print(UUID)
+    print(Insert_ckloss(UUID,Exchange, 5, 5, 0))  ## Percent Check Loss ##
+    Status = Insert_OrderBuy(UUID,Exchange, time.strftime('%Y-%m-%d %H:%M:%S'),Coin,Oty,Rate,Status)
+    print(Status)
 
 def insert_orderbuy_test(Exchange,Coin,Oty,Rate,Status):
     count = 0
