@@ -112,6 +112,7 @@ allow_update_point_bss = "NO"
 #-------Close Order -----#
 allow_close_sts = "NO"
 allow_close_bts = "NO"
+allow_close_bss = "NO"
 
 NOTIBTS_INFO = ""
 NOTISTS_INFO = ""
@@ -325,6 +326,7 @@ class YourBot(telepot.Bot):
         global simtest
         global allow_cutloss_bts
         global allow_stoploss_bts
+        global allow_close_bss
         #--------------------#
         global allow_stopbuy_bss
         global allow_stoprisk_bss
@@ -918,9 +920,12 @@ class YourBot(telepot.Bot):
 
                 #### Allow Take Action BSS Close Order ###
                 #########
+            print("BSS CLOSE "+ORDER)
             if ACT == "CLOSE" and noti_bss == "ON" and 'bss_stopbuy' in NOTISTATE_ACTION \
                 or ACT == "/CLOSE" and noti_bss == "ON" and 'bss_stopbuy' in NOTISTATE_ACTION:
-                bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                #bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                NOTISTATE_ACTION.pop()
+                bot.sendMessage(chat_id, "Do you want to Close Order " + str(ORDER) + " or not ?,/YES,/NO")
                 NOTISTATE_ACTION.append("CloseOrder")
                 allow_close_sts = "NO"
                 allow_close_bts = "NO"
@@ -933,9 +938,12 @@ class YourBot(telepot.Bot):
                 allow_cutloss_bts = "NO"
                 allow_stoploss_bts = "NO"
                 print("Allow to CLose Order =>" + allow_close_bss)
+                ACT=""
             elif ACT == "CLOSE" and noti_bss == "ON" and 'bss_stoprisk' in NOTISTATE_ACTION \
-                or ACT == "/CLOSE" and noti_bss == "ON" and 'bss_stopriks' in NOTISTATE_ACTION:
-                bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                or ACT == "/CLOSE" and noti_bss == "ON" and 'bss_stoprisk' in NOTISTATE_ACTION:
+                #bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                NOTISTATE_ACTION.pop()
+                bot.sendMessage(chat_id, "Do you want to Close Order " + str(ORDER) + " or not ?,/YES,/NO")
                 NOTISTATE_ACTION.append("CloseOrder")
                 allow_close_sts = "NO"
                 allow_close_bts = "NO"
@@ -948,9 +956,12 @@ class YourBot(telepot.Bot):
                 allow_cutloss_bts = "NO"
                 allow_stoploss_bts = "NO"
                 print("Allow to CLose Order =>" + allow_close_bss)
+                ACT=""
             elif ACT == "CLOSE" and noti_bss == "ON" and 'bss_update' in NOTISTATE_ACTION \
                 or ACT == "/CLOSE" and noti_bss == "ON" and 'bss_update' in NOTISTATE_ACTION:
-                bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                #bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                NOTISTATE_ACTION.pop()
+                bot.sendMessage(chat_id, "Do you want to Close Order " + str(ORDER) + " or not ?,/YES,/NO")
                 NOTISTATE_ACTION.append("CloseOrder")
                 allow_close_sts = "NO"
                 allow_close_bts = "NO"
@@ -962,28 +973,13 @@ class YourBot(telepot.Bot):
                 allow_cutloss_sts = "NO"
                 allow_cutloss_bts = "NO"
                 allow_stoploss_bts = "NO"
+                ACT=""
                 print("Allow to CLose Order =>" + allow_close_bss)
-            elif "CloseOrder" in NOTISTATE_ACTION:
-                order_id = msg['text']
-                order_id = check_sys("data=" + order_id + ";echo ${data#*/}")
-                noti_bss = "ON"
-                # allow_cutloss = "NO"
-                if is_number(order_id) == True:
-                    CK = Update_OrderStopBuy(order_id, 'bxinth', 'Close')
-                    if CK == "OK":
-                        bot.sendMessage(chat_id, "Close Order " + order_id + " =>" + CK)
-                    else:
-                        bot.sendMessage(chat_id, "Close Order " + order_id + " =>" + CK)
-                    allow_close_bss = "NO"
-                    NOTISTATE_ACTION.clear()
-                    NOTIBTS_INFO = ""
-                else:
-                    bot.sendMessage(chat_id, "Enter Number only !!, \
-                            \nEnter OrderID:", reply_markup=mainmenu)
-
-            if ACT == "CLOSE" and noti_bts == "ON" and 'bts_cutloss' in NOTISTATE_ACTION \
+            elif ACT == "CLOSE" and noti_bts == "ON" and 'bts_cutloss' in NOTISTATE_ACTION \
                     or ACT == "/CLOSE" and noti_bts == "ON" and 'bts_cutloss' in NOTISTATE_ACTION:
-                bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                #bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                NOTISTATE_ACTION.pop()
+                bot.sendMessage(chat_id, "Do you want to Close Order " + str(ORDER) + " or not ?,/YES,/NO")
                 NOTISTATE_ACTION.append("CloseOrder")
                 allow_close_sts = "NO"
                 allow_close_bts = "YES"
@@ -997,7 +993,9 @@ class YourBot(telepot.Bot):
                 print("Allow to CLose Order =>" + allow_close_bts)
             elif ACT == "CLOSE" and noti_bts == "ON" and 'bts_stoploss' in NOTISTATE_ACTION \
                     or ACT == "/CLOSE" and noti_bts == "ON" and 'bts_stoploss' in NOTISTATE_ACTION:
-                bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                #bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                NOTISTATE_ACTION.pop()
+                bot.sendMessage(chat_id, "Do you want to Close Order " + str(ORDER) + " or not ?,/YES,/NO")
                 NOTISTATE_ACTION.append("CloseOrder")
                 allow_close_sts = "NO"
                 allow_close_bts = "YES"
@@ -1011,7 +1009,9 @@ class YourBot(telepot.Bot):
                 print("Allow to CLose Order =>" + allow_close_bts)
             elif ACT == "CLOSE" and noti_bts == "ON" and 'bts_update' in NOTISTATE_ACTION \
                     or ACT == "/CLOSE" and noti_bts == "ON" and 'bts_update' in NOTISTATE_ACTION:
-                bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                #bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                NOTISTATE_ACTION.pop()
+                bot.sendMessage(chat_id, "Do you want to Close Order " + str(ORDER) + " or not ?,/YES,/NO")
                 NOTISTATE_ACTION.append("CloseOrder")
                 allow_close_sts = "NO"
                 allow_close_bts = "YES"
@@ -1023,26 +1023,12 @@ class YourBot(telepot.Bot):
                 allow_cutloss_bts = "NO"
                 allow_stoploss_bts = "NO"
                 print("Allow to CLose Order =>" + allow_close_bts)
-            elif "CloseOrder" in NOTISTATE_ACTION:
-                order_id = msg['text']
-                order_id = check_sys("data=" + order_id + ";echo ${data#*/}")
-                noti_bts = "ON"
-                # allow_cutloss = "NO"
-                if is_number(order_id) == True:
-                    CK = Update_OrderBuy(order_id, 'bxinth', 'Close')
-                    if CK == "OK":
-                        bot.sendMessage(chat_id, "Close Order " + order_id + " =>" + CK)
-                    else:
-                        bot.sendMessage(chat_id, "Close Order " + order_id + " =>" + CK)
-                    allow_close_bts = "NO"
-                    NOTISTATE_ACTION.clear()
-                    NOTIBTS_INFO=""
-                else:
-                    bot.sendMessage(chat_id,"Enter Number only !!,\nEnter OrderID:", reply_markup=mainmenu )
             ################## STS Update ####
-            if ACT == "CLOSE" and noti_sts == "ON" and 'sts_cutloss' in NOTISTATE_ACTION \
+            elif ACT == "CLOSE" and noti_sts == "ON" and 'sts_cutloss' in NOTISTATE_ACTION \
                     or ACT == "/CLOSE" and noti_sts == "ON" and 'sts_cutloss' in NOTISTATE_ACTION:
-                bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                #bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                NOTISTATE_ACTION.pop()
+                bot.sendMessage(chat_id, "Do you want to Close Order " + str(ORDER) + " or not ?,/YES,/NO")
                 NOTISTATE_ACTION.append("CloseOrder")
                 allow_close_sts = "YES"
                 allow_close_bts = "NO"
@@ -1056,7 +1042,9 @@ class YourBot(telepot.Bot):
                 print("Allow to CLose Order =>" + allow_close_sts)
             elif ACT == "CLOSE" and noti_sts == "ON" and 'sts_stoploss' in NOTISTATE_ACTION \
                     or ACT == "/CLOSE" and noti_sts == "ON" and 'sts_stoploss' in NOTISTATE_ACTION:
-                bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                #bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                NOTISTATE_ACTION.pop()
+                bot.sendMessage(chat_id, "Do you want to Close Order " + str(ORDER) + " or not ?,/YES,/NO")
                 NOTISTATE_ACTION.append("CloseOrder")
                 allow_close_sts = "YES"
                 allow_close_bts = "NO"
@@ -1070,7 +1058,9 @@ class YourBot(telepot.Bot):
                 print("Allow to CLose Order =>" + allow_close_sts)
             elif ACT == "CLOSE" and noti_sts == "ON" and 'sts_update' in NOTISTATE_ACTION \
                     or ACT == "/CLOSE" and noti_sts == "ON" and 'sts_update' in NOTISTATE_ACTION:
-                bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                #bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
+                NOTISTATE_ACTION.pop()
+                bot.sendMessage(chat_id, "Do you want to Close Order " + str(ORDER) + " or not ?,/YES,/NO")
                 NOTISTATE_ACTION.append("CloseOrder")
                 allow_update_point_sts = "NO"
                 allow_update_point_bts = "NO"
@@ -1084,24 +1074,60 @@ class YourBot(telepot.Bot):
                 allow_cutloss_bts = "NO"
                 allow_stoploss_bts = "NO"
                 print("Allow to CLose Order =>" + allow_close_sts)
-            elif "CloseOrder" in NOTISTATE_ACTION:
-                order_id = msg['text']
-                order_id = check_sys("data=" + order_id + ";echo ${data#*/}")
-                noti_bts = "ON"
-                # allow_cutloss = "NO"
-                if is_number(order_id) == True:
-                    CK = Update_OrderSale(order_id, 'bxinth', 'Close')
-                    if CK == "OK":
-                        bot.sendMessage(chat_id, "Close Order " + order_id + " =>" + CK)
+            elif "CloseOrder" in NOTISTATE_ACTION and msg['text'] == "/YES":
+                noti_bss = "ON"
+                print("Apply Close Stage !!")
+                if str(ORDER) == "":
+                    NOTISTATE_ACTION.pop()
+                    bot.sendMessage(chat_id, "Enter OrderID:")
+                    NOTISTATE_ACTION.append("ApplyClose")
+                elif str(ORDER) != "":
+                    order_id = ORDER
+                    if is_number(ORDER) == True:
+                        if allow_close_bss == "YES":
+                           CK = Update_OrderStopBuy(order_id, 'bxinth', 'Close')
+                        elif allow_close_bts == "YES":
+                           CK = Update_OrderBuy(order_id, 'bxinth', 'Close')
+                        elif allow_close_sts == "YES":
+                           CK = Update_OrderSale(order_id, 'bxinth', 'Close')
+                        if CK == "OK":
+                            bot.sendMessage(chat_id, "Close Order " + order_id + " =>" + CK)
+                            allow_close_bss = "NO"
+                            allow_close_bts = "NO"
+                            allow_close_sts = "NO"
+                            NOTISTATE_ACTION.clear()
+                        else:
+                            bot.sendMessage(chat_id, "Close Order " + order_id + " =>" + CK)
                     else:
-                        bot.sendMessage(chat_id, "Close Order " + order_id + " =>" + CK)
-                    allow_close_sts = "NO"
-                    NOTISTS_INFO = ""
-                    NOTISTATE_ACTION.clear()
-                else:
-                    bot.sendMessage(chat_id, "Enter Number only !!, \
-                        \nEnter OrderID:", reply_markup=mainmenu)
-                    #####################
+                        bot.sendMessage(chat_id, "Not found Order ID!!, \
+                                    \nEnter OrderID:", reply_markup=mainmenu)
+                    #NOTISTATE_ACTION.append("ApplyClose")
+            elif "ApplyClose" in NOTISTATE_ACTION and msg['text'] != "":
+                print("Apply CLose Order !!!")
+                if str(ORDER) == "":
+                    order_id = msg['text']
+                    if is_number(order_id) == True:
+                        order_id = check_sys("data=" + order_id + ";echo ${data#*/}")
+                        if allow_close_bss == "YES":
+                            CK = Update_OrderStopBuy(order_id, 'bxinth', 'Close')
+                        elif allow_close_bts == "YES":
+                            CK = Update_OrderBuy(order_id, 'bxinth', 'Close')
+                        elif allow_close_sts == "YES":
+                            CK = Update_OrderSale(order_id, 'bxinth', 'Close')
+                        if CK == "OK":
+                            bot.sendMessage(chat_id, "Close Order " + order_id + " =>" + CK)
+                            allow_close_bss = "NO"
+                            allow_close_bts = "NO"
+                            allow_close_sts = "NO"
+                            NOTISTATE_ACTION.clear()
+                        else:
+                            bot.sendMessage(chat_id, "Close Order " + order_id + " =>" + CK)
+                    else:
+                        bot.sendMessage(chat_id, "Enter Number only !!, \
+                                \nEnter OrderID:", reply_markup=mainmenu)
+
+
+
             ### SELL ORDER ####
             if msg['text'] == 'SELL ORDER':
                 bot.sendMessage(chat_id, 'Using for Sell Coin Directly,Support OrderBuy Only !!!',
