@@ -56,7 +56,18 @@ def Update_OrderSale(UUID, Exchange, Status):
     except:
         return "Failed"
 
-
+## Insert Profitt ##
+def Insert_Profit(UUID,Time,Exchange,Coin,Volumn, Buy,Sell,Margin):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "INSERT INTO  `profit` (`UUID`,`Time`,`Exchange`,`Coin`,`Volumn`,`Buy`,`Sell`,`Margin`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+        cursor.execute(sql, (UUID, Time, Exchange, Coin, Volumn, Buy, Sell,Margin))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
 # OrDer_Buy
 def Insert_OrderBuy(UUID, Exchange, Time, Coin_Market, Quantity, Rate, Status):
     try:
@@ -573,17 +584,19 @@ if __name__ == "__main__":
 
     #ST=insert_orderbuy_test('bxinth','DASH/THB',100,140,'buy')
     #print(ST)
-    ST=Get_Nsell('bxinth','ETH/THB')
-    for N in list(ST):
-        Coin=N[2]
-        Count=N[3]
-        print("NSell Coint is "+Coin+ " Discount is "+str(Count)+"")
+    SK=Insert_Profit("123456",time.strftime('%Y-%m-%d %H:%M:%S'),'bxinth',"LTC/THB",1,30000,40000,10000)
+    print(SK)
+    #ST=Get_Nsell('bxinth','ETH/THB')
+    #for N in list(ST):
+     #   Coin=N[2]
+     #   Count=N[3]
+      #  print("NSell Coint is "+Coin+ " Discount is "+str(Count)+"")
 
-    ST = Get_Nbuy('bxinth', 'ETH/THB')
-    for N in list(ST):
-        Coin = N[2]
-        Count = N[3]
-        print("Nbuy Coint is " + Coin + " Discount is " + str(Count) + "")
+    #ST = Get_Nbuy('bxinth', 'ETH/THB')
+    #for N in list(ST):
+    #    Coin = N[2]
+    #    Count = N[3]
+     #   print("Nbuy Coint is " + Coin + " Discount is " + str(Count) + "")
     #for order in list(ST):
     #    time=(order[2])
      #   order_id=(order[1])
