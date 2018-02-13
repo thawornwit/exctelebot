@@ -56,6 +56,42 @@ def Update_OrderSale(UUID, Exchange, Status):
     except:
         return "Failed"
 
+## Insert CoinBalance ##
+def Insert_CoinBlance(Exchange,Coin,Total,Used,Free,ChatID):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "INSERT INTO  `coin_balance` (`Exchange`,`Coin`,`Total`,`Used`,`Free`,`ChatID`) VALUES (%s,%s,%s,%s,%s,%s)"
+        cursor.execute(sql, (Exchange,Coin,Total,Used,Free,ChatID))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+## Update CoinBalance ##
+def Update_CoinBlance(Exchange,Coin,Total,Used,Free,ChatID):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "UPDATE `coin_balance` SET Total=%s,Used=%s,Free=%s WHERE ChatID=%s AND Exchange=%s AND Coin=%s"
+        cursor.execute(sql, (Total,Used,Free,ChatID,Exchange,Coin))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+## GetCoinBalance ##
+def Get_CoinBlance(Exchange,Coin,ChatID): ## buy,sold status
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "SELECT * FROM `coin_balance` where `Coin`=\""+Coin+"\" and `Exchange`=\"" + Exchange + "\" and `ChatID`=\"" + ChatID + "\""
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        con.close()
+        return results
+    except:
+        return "failed"
 ## Insert Profitt ##
 def Insert_Profit(UUID,Time,Exchange,Coin,Volumn, Buy,Sell,Margin):
     try:
@@ -577,6 +613,13 @@ def insert_ordersale_test(Exchange,Coin,Oty,Rate,Status):
 
 if __name__ == "__main__":
 
+    #CK=Insert_CoinBlance('bxinth','LTC',10,0,10,342111)
+    #print(CK)
+    #CK=Update_CoinBlance('bxinth','LTC',100,0,100,'342111')
+    #print(CK)
+    CK=Get_CoinBlance('bxinth','BCH','342111')
+    print(CK)
+
     #ST=Update_Last_Price('900000','BTC/THB','bxinth')
     #ST=Get_OpenOrder('bxinth','open')
     #ST=insert_ordersale_test('bxinth','DASH/THB',100,31000,'sell')
@@ -584,8 +627,8 @@ if __name__ == "__main__":
 
     #ST=insert_orderbuy_test('bxinth','DASH/THB',100,140,'buy')
     #print(ST)
-    SK=Insert_Profit("123456",time.strftime('%Y-%m-%d %H:%M:%S'),'bxinth',"LTC/THB",1,30000,40000,10000)
-    print(SK)
+   # SK=Insert_Profit("123456",time.strftime('%Y-%m-%d %H:%M:%S'),'bxinth',"LTC/THB",1,30000,40000,10000)
+   # print(SK)
     #ST=Get_Nsell('bxinth','ETH/THB')
     #for N in list(ST):
      #   Coin=N[2]

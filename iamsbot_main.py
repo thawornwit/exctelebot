@@ -349,6 +349,7 @@ class YourBot(telepot.Bot):
         global NOTIBSS_INFO
         global ORDER
         global ACT
+        global CONTINUE
 
         content_type, chat_type, chat_id = telepot.glance(msg)
         content_type, chat_type, chat_id_test = telepot.glance(msg)
@@ -1360,13 +1361,15 @@ class YourBot(telepot.Bot):
                         ORDERBUY.append(Buy)
                         ORDERBUY.append(Rate)
                         ORDERBUY.append(str(format_float(float(Buy) / float(Rate))))
+                    elif Oid != "":
+                         bot.sendMessage(chat_id,"Exchange Error =>"+str(Oid))
 
                     if Bal != 201 and is_number(Oid) == True:
                         bot.sendMessage(chat_id, "Open Order " + str(Oid) + "  --> Successfully")
                         BX.clear()
                         # bot.sendMessage(chat_id,"Enter /buyCoin command for continue trading ..")
                     else:
-                        bot.sendMessage(chat_id, "Open Order " + str(Oid) + "  --> Failed")
+                       # bot.sendMessage(chat_id, "Open Order " + str(Oid) + "  --> Failed")
                         BX.clear()
 
                 else:
@@ -1710,7 +1713,6 @@ class YourBot(telepot.Bot):
                         ORDERBUY.clear()
 
             elif "CLOSE_NOW" in STRATEGY:
-                global CONTINUE
                 Order = msg['text']
                 Uid = check_sys("data=" + Order + ";echo ${data#*/}")
                 print("Order ID " + Uid)
@@ -2416,7 +2418,7 @@ class YourBot(telepot.Bot):
                     ACT=""
                     continue
                 elif ST != "":
-                    bot.sendMessage(chat_id,str(ST))
+                    bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                     allow_update_bss = "NO"
                     NOTIBSS_INFO = ""
                     ORDER = ""
@@ -2494,8 +2496,7 @@ class YourBot(telepot.Bot):
                             bot.sendMessage(chat_id, NOTIBSS_INFO, reply_markup=mainmenu)
                             COUNT += 1
                             NOTIBSS_INFO = ""
-
-                            #time.sleep(4)
+                            time.sleep(4)
                             print("Buy StopBuy at " + str(StopBuy_Price) + " !!!")
                         if allow_stopbuy_bss == "YES" and order_id == ORDER:
                             noti_bss = "ON"
@@ -2535,7 +2536,7 @@ class YourBot(telepot.Bot):
                             ORDER = ""
                             ACT = ""
                         elif ST != "":
-                            bot.sendMessage(chat_id,ST)
+                            bot.sendMessage(chat_id,"Exchange Error =>"+str(ST)) 
                             allow_stopbuy_bss = "NO"
                             NOTIBSS_INFO = ""
                             ORDER = ""
@@ -2576,6 +2577,7 @@ class YourBot(telepot.Bot):
                              \nAccept this Action or not?\n----\n/OK_" + order_id + "\n/UPDATE_" + order_id + "\n/CLOSE_" + order_id)
                             bot.sendMessage(chat_id, NOTIBSS_INFO, reply_markup=mainmenu)
                             NOTIBSS_INFO = ""
+                            time.sleep(4)
                             print("Buy StopRisk at " + str(LastPrice) + " !!!")
                         time.sleep(1)
                         if allow_stoprisk_bss == "YES" and order_id == ORDER:
@@ -2616,7 +2618,7 @@ class YourBot(telepot.Bot):
                             ORDER = ""
                             ACT = ""
                         elif ST != "":
-                            bot.sendMessage(chat_id,ST)
+                            bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                             allow_stoprisk_bss = "NO"
                             NOTIBSS_INFO = ""
                             COUNT += 1
@@ -2723,7 +2725,7 @@ class YourBot(telepot.Bot):
                     NOTIBTS_INFO = ""
                     continue
                 elif ST != "":
-                    bot.sendMessage(chat_id,str(ST))
+                    bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                     continue
 
                 if allow_update_bts != "YES":
@@ -2809,7 +2811,7 @@ class YourBot(telepot.Bot):
                             bot.sendMessage(chat_id, NOTIBTS_INFO, reply_markup=mainmenu)
                             COUNT += 1
                             NOTIBTS_INFO = ""
-                            #time.sleep(4)
+                            time.sleep(4)
                             print("Sale Cut loss at " + str(CutLossPrice) + " !!!")
                         if allow_cutloss_bts == "YES" and order_id == ORDER:
                             noti_bts = "ON"
@@ -2838,13 +2840,9 @@ class YourBot(telepot.Bot):
                             Insert_Profit(order_id, time.strftime('%Y-%m-%d %H:%M:%S'), exchange, coin,volumn,qty,format_floatc(((CutLossPrice / rate) * qty),3),format_floatc(profit_fee, 2))
                             allow_cutloss_bts = "NO"
                             NOTIBTS_INFO = ""
-                            #CK = Update_OrderBuy(order_id, exchange, 'sold')
-                            #if CK == "OK":
-                            #    bot.sendMessage(chat_id, 'Update Status =>' + CK, reply_markup=mainmenu)
-                            #else:
-                            #    bot.sendMessage(chat_id, 'Update Status =>' + CK, reply_markup=mainmenu)
+                            time.sleep(2)
                         elif ST != "":
-                            bot.sendMessage(chat_id,str(ST))
+                            bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                             continue
                              
 
@@ -2937,7 +2935,7 @@ class YourBot(telepot.Bot):
                             #else:
                             #    bot.sendMessage(chat_id, 'Update Status Sold out =>' + CK)
                         elif ST != "":
-                            bot.sendMessage(chat_id,str(ST))
+                            bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                             continue
 
             else:
@@ -3041,7 +3039,7 @@ class YourBot(telepot.Bot):
                     NOTISTS_INFO = ""
                     continue
                 elif ST != "":
-                    bot.sendMessage(chat_id,str(ST))
+                    bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                     continue
 
                 if allow_update_sts != "YES":
@@ -3097,7 +3095,7 @@ class YourBot(telepot.Bot):
                             bot.sendMessage(chat_id, NOTISTS_INFO, reply_markup=mainmenu)
                             COUNT += 1
                             NOTISTS_INFO = ""
-                            #time.sleep(1)
+                            time.sleep(2)
                         print("Action Close Status" + allow_close_sts)
                         if allow_update_sts == "YES" and ORDER == order_id:
                             noti_sts = "ON"
@@ -3134,7 +3132,7 @@ class YourBot(telepot.Bot):
                             allow_update_sts = "NO"
                             NOTISTS_INFO = ""
                         elif ST != "":
-                            bot.sendMessage(chat_id,str(ST))
+                            bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                             continue
 
                     if result[0] == "CutLoss":
@@ -3189,6 +3187,7 @@ class YourBot(telepot.Bot):
                             COUNT += 1
                             NOTISTS_INFO = ""
                             print("Sale Cut loss at " + str(CutLossPrice) + " !!!")
+                            time.sleep(2)
 
                         if allow_cutloss_sts == "YES" and order_id == ORDER:
                             noti_sts = "ON"
@@ -3226,7 +3225,7 @@ class YourBot(telepot.Bot):
                             # else:
                             #     bot.sendMessage(chat_id, 'Update Status =>' + CK)
                         elif ST != "":
-                            bot.sendMessage(chat_id,str(ST))
+                            bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                             continue
 
                     elif result[0] == "StopLoss":
@@ -3285,7 +3284,7 @@ class YourBot(telepot.Bot):
                             print("Sale Stop loss at " + str(LastPrice) + " !!!")
                             print("Change fee:" + str(fee))
                             print('Profit:' + str(profit_fee))
-                            time.sleep(1)
+                            time.sleep(2)
                         if allow_stoploss_sts == "YES" and order_id == ORDER:
                             noti_sts = "ON"
                             #allow_stoploss = "NO"
@@ -3318,7 +3317,7 @@ class YourBot(telepot.Bot):
                             allow_stoploss_sts = "NO"
                             NOTISTS_INFO = ""
                         elif ST != "":
-                            bot.sendMessage(chat_id,str(ST) )
+                            bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                             continue
                             #CK = Update_OrderSale(order_id, exchange, 'sold')
                             #if CK == "OK":
@@ -3514,6 +3513,7 @@ while True:
     if STRATEGY_CHECK == "ON":
         #simtest = "yes"
         for adminid in adminchatid:
+            print("ChatID:"+str(adminid))
             bot.bts('bxinth', adminid)
             ####################
             bot.cts('bxinth', adminid)
@@ -3521,7 +3521,6 @@ while True:
             bot.bls('bxinth', adminid)
             ####################
             bot.check_close_order('bxinth', adminid)
-
     time.sleep(15)
 #    print("Admin ChatID "+str(adminid))
 #    ST = bot.bts('bxinth', adminid)

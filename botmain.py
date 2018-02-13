@@ -188,7 +188,6 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
         if CutLossPrice >= LastPrice:
             return ('CutLoss', CutLossPrice,CutLoss)
 
-
 ## Find price deep dows ## Find proce low and Buy
 def buy_StopBuy_shadow(UUID, Exchange, LastPrice,StartRate):
     StopRisk = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopRisk')
@@ -363,7 +362,6 @@ def get_balance(id, coin):
             Bal += ("Used:" + str(format_floatc(account_balance['used'][bal],6)) + "\n")
             Bal += ("Free:" + str(format_floatc(account_balance['free'][bal],6)) + "\n")
             Bal+="----------------\n"
-
             CK = 0
     if CK == 0:
         return str(Bal)
@@ -371,7 +369,7 @@ def get_balance(id, coin):
         return 201
 
 ##############################
-def sale_coin_sim(symbol, volumn, price, exchange):
+def sale_coin_sim(symbol, volumn, price):
         number = ''.join(random.sample("0123456789", 8))
         print('Number of randome is ' + number)
     ## Insert Coin ####
@@ -430,7 +428,7 @@ def sale_coin_res(symbol, volumn, price, exchange):
     else:
         return (str("Sale " + symbol + " Failed error is" + Result['info']['error']))
 ##############################
-def sale_coin(id, symbol, volumn, price, exchange):
+def sale_coin(id, symbol, volumn, price):
     try:
         ## Fortest ##
         #Result=True
@@ -475,7 +473,7 @@ def sale_coin(id, symbol, volumn, price, exchange):
         return (str(e) + 'Exchange Error')
 
 ####### BSS Only
-def buy_coin_bss_sim(symbol, volumn, price, exchange):
+def buy_coin_bss_sim(symbol, volumn, price):
         number = ''.join(random.sample("0123456789", 8))
         print('Number of randome is ' + number)
         ## Insert Coin ####
@@ -496,7 +494,7 @@ def buy_coin_bss_sim(symbol, volumn, price, exchange):
             return (str("Buy " + symbol + " Failed error is" + Result['info']['error']))
                 # return 1
 
-def buy_coin_bss(id, symbol, volumn, price, exchange):
+def buy_coin_bss(id, symbol, volumn, price):
     try:
         Result = id.create_order(symbol, 'market', 'buy', volumn, price, {'leverage': 3})
         print(Result)
@@ -564,7 +562,7 @@ def buy_coin_res(symbol, volumn, price, exchange):
         # return 1
 
 
-######### BTS Only ###
+### BTS Only ###
 def buy_coin_sim(symbol, volumn, price, exchange):
     number = ''.join(random.sample("0123456789", 8))
     print('Number of randome is ' + number)
@@ -849,13 +847,54 @@ def ck_close_order(id, order_id, symbol, Type, exchange):
             return False
 
 
+def sync_balance(id,Exchange,ChatID):
+    INFO=""
+    account_balance = id.fetch_balance({'type': 'account'})
+    for coin in (get_positive_accounts(account_balance['total'])):
+        Total=(str(format_floatc(account_balance['total'][coin], 6)))
+        Used=(str(format_floatc(account_balance['used'][coin], 6)))
+        Free=(str(format_floatc(account_balance['free'][coin], 6)))
+        #-----------------------------------#
+        CK = Get_CoinBlance(Exchange,coin,ChatID)
+        if str(CK) == "()":
+            if Total != "" and Used != "" and Free != "":
+                CK=Insert_CoinBlance(Exchange,coin,Total,Used,Free,ChatID)
+                if str(CK) == "OK":
+                    print("\n|--Sync Update New --|\
+                        \nUser:" + str(ChatID) + "\
+                        \nCoin:" + str(coin) + "\
+                        \nTotal:" + str(Total) + "\
+                        \nUsed:" + str(Used) + "\
+                        \nFree:" + str(Free))
+                    continue
+                else:
+                    print("Sync Update database --> Failed")
+            continue
+        else:
+            CK=Update_CoinBlance(Exchange,coin,Total,Used,Free,ChatID)
+            if str(CK) == "OK":
+                print("\n|--Sync Update --|\
+                \nUser:"+str(ChatID)+"\
+                \nCoin:"+coin+"\
+                \nTotal:"+str(Total)+"\
+                \nUsed:"+str(Used)+"\
+                \nFree:"+str(Free))
+                continue
+            else:
+                print("Sync Update database --> Failed")
+
+
+
+
 def main():
     # bxin=ccxt.bxinth()
     bxin = ccxt.bxinth({
-        'apiKey': '8cdf0f0a666c',
-        'secret': 'b6b22e1e51eb',
+        'apiKey': 'a9cd1f2e1512',
+        'secret': '551c1810fa4b',
         "enableRateLimit": True,
     })
+    ChatID=259669700
+    print(sync_balance(bxin,'bxinth',str(ChatID)))
     #BXCOIN=['BCH/THB','BTC/THB','LTC/THB']
     #INFO=""
     #for coin in BXCOIN:
@@ -870,12 +909,12 @@ def main():
 
 
 
-    while True:
+    #while True:
     #   #UUID, Exchange, LastPrice,StartRate
-        Lasprice=get_lastprice_sim('LTC/THB','bxinth')
-        ST=buy_StopBuy_shadow('86715032','bxinth',Lasprice,8000)
-        print(ST)
-        time.sleep(2)
+        #Lasprice=get_lastprice_sim('LTC/THB','bxinth')
+        #ST=buy_StopBuy_shadow('86715032','bxinth',Lasprice,8000)
+        #print(ST)
+        #time.sleep(2)
 
 
     #buy=500000
