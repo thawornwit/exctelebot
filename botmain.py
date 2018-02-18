@@ -73,7 +73,7 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
     StopLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Stoploss')
     CutLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Cutloss')
     print("--------------------------")
-    print('Start Bot Cutloss STS..')
+    print('Start Bot Cutloss CTS..')
     print('1.StartRate=>' + str(BuyRate))
     print('2.StopLoss=>' + str(StopLoss))
     print('3.CutLoss=>' + str(CutLoss))
@@ -340,33 +340,146 @@ def get_positive_accounts(balance):
             result[currency] = balance[currency]
     return result
 
+def Update_Balance_Exc(Exchange,Coin,Market,Qty,Type,SB,ChatID):
+        INFO = ""
+        total = 0
+        Coin = check_sys("data=" + Coin + ";echo ${data%/*}")
+        CK = Get_CoinBlance(Exchange, Coin, str(ChatID))
+        if CK != "Failed":
+            for bl in list(CK):
+                coin = str(bl[2])
+                total = format_floatc(bl[3], 5)
+                used = format_floatc(bl[4], 5)
+                free = format_floatc(bl[5], 5)
+                INFO += ("\n|-- Coin Balance " + coin + "--|\
+                        \nTotal:" +str(total) + "\
+                        \nUsed:" +str(used) + "\
+                        \nFree:" +str(free) + "\
+                        \n----------------")
+                if Type == "buy" and SB == "O":
+                    print("Action to Buy !!!+>"+coin)
+                    if coin == Market and float(Qty) > 0.0: ## Check market
+                        Total=format_floatc((float(total) - float(Qty)),4)
+                        Free=format_floatc((float(free) - float(Qty)),4)
+                        Used=format_floatc((float(used) + float(Qty)),4)
+                        #if float(Total) < 0 :
+                        #    return (False,"Minimum balance less than 10 Bath !!")
+                        #else:
+                        CK=Update_CoinBlance(Exchange,Coin,Total,Used,Free,str(ChatID))
+                        print("Update Data Buy => "+CK)
+                    else:
+                        continue
+                elif Type == "buy" and SB == "C":
+                    print("Action to Buy !!!+>" + coin)
+                    if coin == Market and float(Qty) > 0.0:  ## Check market
+                        Total = format_floatc((float(total) + float(Qty)), 4)
+                        Free = format_floatc((float(free) + float(Qty)), 4)
+                        Used = format_floatc((float(used) - float(Qty)), 4)
+                        ### Restore Update  coin
+                        CK = Update_CoinBlance(Exchange, Coin, Total, Used, Free, str(ChatID))
+                        if CK == "OK":
+                            print("Update  Close Balance  !! => " + CK)
+                        else:
+                            print("Update  Close Balance !! => " + CK)
+                    else:
+                        continue
 
-def get_balance(id, coin):
-    ## GetBalance ##
-    CK = 1
-    Bal = ""
-    coin = check_sys("data=" + coin + ";echo ${data%/*}")
-    # trading_balance = id.fetch_balance()
-    account_balance = id.fetch_balance({'type': 'account'})
-    # Bal += ("|= Trading Balance =| \n")
-    # for bal in (get_positive_accounts(trading_balance['total'])):
-    # if bal == coin:
-    # Bal += (bal + ":" + str(trading_balance['total'][bal]) + "\n")
-    # Bal += ("Free:" + str(trading_balance['free'][bal]) + "\n")
-    #       Bal += ("Used:" + str(trading_balance['used'][bal]) + "\n")
-    #       CK=0
-    #Bal += ("|= "+coin+" Balance =|\n")
-    for bal in (get_positive_accounts(account_balance['total'])):
-        if bal == coin:
-            Bal += (bal + ":" + str(format_floatc(account_balance['total'][bal],6)) + "\n")
-            Bal += ("Used:" + str(format_floatc(account_balance['used'][bal],6)) + "\n")
-            Bal += ("Free:" + str(format_floatc(account_balance['free'][bal],6)) + "\n")
-            Bal+="----------------\n"
-            CK = 0
-    if CK == 0:
-        return str(Bal)
+                        ################
+                if Type == "sell" and SB == "O":
+                    print("Action to Sell !!!")
+                    if coin == Coin and float(Qty) > 0.0:  ## Check market
+                        Total = format_floatc((float(total) - float(Qty)), 4)
+                        Free = format_floatc((float(free) - float(Qty)), 4)
+                        Used = format_floatc((float(used) + float(Qty)), 4)
+                        #if float(Total) < 0.0010:
+                        #    return (False,"Minimum coin balance is not available,please verify  !!")
+                        #else:
+                        CK = Update_CoinBlance(Exchange, Coin, Total, Used, Free,str(ChatID))
+                    else:
+                        continue
+                if Type == "sell" and SB == "C":
+                    print("Action to Sell !!!")
+                    if coin == Coin and float(Qty) > 0.0:  ## Check market
+                        Total = format_floatc((float(total) + float(Qty)), 4)
+                        Free = format_floatc((float(free) + float(Qty)), 4)
+                        Used = format_floatc((float(used) - float(Qty)), 4)
+                        ## Restore Update coin ##
+                        CK = Update_CoinBlance(Exchange, Coin, Total, Used, Free, str(ChatID))
+                        if CK == "OK":
+                            print("Update  Close Balance !! => " + CK)
+                        else:
+                            print("Update  Close Balance !! => " + CK)
+                    else:
+                        continue
+
+            if  str(CK) == "OK":
+                INFO+="\n-------------\
+                \n|= Update Balance =|\
+                \nCoin: "+Coin+"\
+                \nTotal:"+str(Total)+"\
+                \nFree:"+str(Free)+"\
+                \nUsed:"+str(Used)+""
+                print(INFO)
+                return (True,INFO)
+        else:
+            return (False,"Can't Get database for update balance !!")
+
+def get_balance(Exchange,Coin,ChatID):
+    INFO=""
+    total=0
+    Coin = check_sys("data=" + Coin + ";echo ${data%/*}")
+    CK = Get_CoinBlance(Exchange,Coin, str(ChatID))
+    if CK != "Failed":
+        for bl in list(CK):
+            coin = str(bl[2])
+            total = format_floatc(bl[3], 5)
+            used = format_floatc(bl[4], 5)
+            free = format_floatc(bl[5], 5)
+            INFO=("\n|-- Blance " + coin +"--|\
+                    \n  Total:" + total + "\
+                    \n  Used:" + used + "\
+                    \n  Free:" + free + "\
+                    \n----------------")
+        if float(total) > 0:
+            return INFO
+        elif float(total) <= 0:
+            return False
     else:
-        return 201
+        return False
+
+def get_balance_bx(id, coin):
+    ## GetBalance ##
+    try:
+        CK = 1
+        Bal = ""
+        coin = check_sys("data=" + coin + ";echo ${data%/*}")
+    # trading_balance = id.fetch_balance()
+        account_balance = id.fetch_balance({'type': 'account'})
+        for bal in (get_positive_accounts(account_balance['total'])):
+            if bal == coin:
+                Bal += (bal + ":" + str(format_floatc(account_balance['total'][bal],6)) + "\n")
+                Bal += ("Used:" + str(format_floatc(account_balance['used'][bal],6)) + "\n")
+                Bal += ("Free:" + str(format_floatc(account_balance['free'][bal],6)) + "\n")
+                Bal+="----------------\n"
+                CK = 0
+        if CK == 0:
+            return str(Bal)
+        else:
+            return 201
+    except ccxt.DDoSProtection as e:
+        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        return (str(e) + 'DDoS Protection (ignoring)')
+    except ccxt.RequestTimeout as e:
+        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        return (str(e) + 'Request Timeout (ignoring)')
+    except ccxt.ExchangeNotAvailable as e:
+        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
+    except ccxt.AuthenticationError as e:
+        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        return (str(e) + 'Authentication Error (missing API keys, ignoring)')
+    except ccxt.ExchangeError as e:
+        return (str(e) + 'Exchange Error')
 
 ##############################
 def sale_coin_sim(symbol, volumn, price):
@@ -428,7 +541,7 @@ def sale_coin_res(symbol, volumn, price, exchange):
     else:
         return (str("Sale " + symbol + " Failed error is" + Result['info']['error']))
 ##############################
-def sale_coin(id, symbol, volumn, price):
+def sale_coin(id, symbol,volumn, price):
     try:
         ## Fortest ##
         #Result=True
@@ -846,42 +959,111 @@ def ck_close_order(id, order_id, symbol, Type, exchange):
             print("Update Open Order " + order_id + " failed")
             return False
 
-
-def sync_balance(id,Exchange,ChatID):
-    INFO=""
-    account_balance = id.fetch_balance({'type': 'account'})
-    for coin in (get_positive_accounts(account_balance['total'])):
-        Total=(str(format_floatc(account_balance['total'][coin], 6)))
-        Used=(str(format_floatc(account_balance['used'][coin], 6)))
-        Free=(str(format_floatc(account_balance['free'][coin], 6)))
-        #-----------------------------------#
-        CK = Get_CoinBlance(Exchange,coin,ChatID)
-        if str(CK) == "()":
-            if Total != "" and Used != "" and Free != "":
-                CK=Insert_CoinBlance(Exchange,coin,Total,Used,Free,ChatID)
-                if str(CK) == "OK":
-                    print("\n|--Sync Update New --|\
+def sync_balance_coin(id,Exchange,Coin,ChatID):
+    try:
+        INFO=""
+        account_balance = id.fetch_balance({'type': 'account'})
+        for coin in ((account_balance['total'])):
+            Total=(str(format_floatc(account_balance['total'][coin], 6)))
+            Used=(str(format_floatc(account_balance['used'][coin], 6)))
+            Free=(str(format_floatc(account_balance['free'][coin], 6)))
+            #-----------------------------------
+            CK = Get_CoinBlance(Exchange,coin,ChatID)
+            if str(CK) == "()" and coin == Coin:
+                if Total != "" and Used != "" and Free != "":
+                    CK=Insert_CoinBlance(Exchange,coin,Total,Used,Free,ChatID)
+                    if str(CK) == "OK":
+                        INFO+=("|--Sync Update New --|\
                         \nUser:" + str(ChatID) + "\
                         \nCoin:" + str(coin) + "\
                         \nTotal:" + str(Total) + "\
                         \nUsed:" + str(Used) + "\
                         \nFree:" + str(Free))
+                        continue
+                    else:
+                        return("Sync Update database --> Failed")
+            elif str(CK) != "()" and coin == Coin:
+                CK=Update_CoinBlance(Exchange,coin,Total,Used,Free,ChatID)
+                if str(CK) == "OK":
+                    INFO+=("|--Sync Update--|\
+                    \nUser:"+str(ChatID)+"\
+                    \nCoin:"+coin+"\
+                    \nTotal:"+str(Total)+"\
+                    \nUsed:"+str(Used)+"\
+                    \nFree:"+str(Free))
                     continue
                 else:
-                    print("Sync Update database --> Failed")
-            continue
-        else:
-            CK=Update_CoinBlance(Exchange,coin,Total,Used,Free,ChatID)
-            if str(CK) == "OK":
-                print("\n|--Sync Update --|\
+                    return("Sync Update database --> Failed")
+
+        return INFO
+
+    except ccxt.DDoSProtection as e:
+        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        return (str(e) + 'DDoS Protection (ignoring)')
+    except ccxt.RequestTimeout as e:
+        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        return (str(e) + 'Request Timeout (ignoring)')
+    except ccxt.ExchangeNotAvailable as e:
+        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
+    except ccxt.AuthenticationError as e:
+        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        return (str(e) + 'Authentication Error (missing API keys, ignoring)')
+    except ccxt.ExchangeError as e:
+        return (str(e) + 'Exchange Error')
+
+
+def sync_balance_all(id,Exchange,ChatID):
+    try:
+        INFO=""
+        account_balance = id.fetch_balance({'type': 'account'})
+        for coin in ((account_balance['total'])):
+            Total=(str(format_floatc(account_balance['total'][coin], 6)))
+            Used=(str(format_floatc(account_balance['used'][coin], 6)))
+            Free=(str(format_floatc(account_balance['free'][coin], 6)))
+            #-----------------------------------
+            CK = Get_CoinBlance(Exchange,coin,ChatID)
+            if str(CK) == "()":
+                if Total != "" and Used != "" and Free != "":
+                    CK=Insert_CoinBlance(Exchange,coin,Total,Used,Free,ChatID)
+                    if str(CK) == "OK":
+                        print("|--Sync Update New --|\
+                        \nUser:" + str(ChatID) + "\
+                        \nCoin:" + str(coin) + "\
+                        \nTotal:" + str(Total) + "\
+                        \nUsed:" + str(Used) + "\
+                        \nFree:" + str(Free))
+                        continue
+                    else:
+                        return("Sync Update database --> Failed")
+            else:
+                CK=Update_CoinBlance(Exchange,coin,Total,Used,Free,ChatID)
+                if str(CK) == "OK":
+                    print("|--Sync Update--|\
                 \nUser:"+str(ChatID)+"\
                 \nCoin:"+coin+"\
                 \nTotal:"+str(Total)+"\
                 \nUsed:"+str(Used)+"\
                 \nFree:"+str(Free))
-                continue
-            else:
-                print("Sync Update database --> Failed")
+                    continue
+                else:
+
+                    return("Sync Update database --> Failed")
+
+    except ccxt.DDoSProtection as e:
+        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        return (str(e) + 'DDoS Protection (ignoring)')
+    except ccxt.RequestTimeout as e:
+        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        return (str(e) + 'Request Timeout (ignoring)')
+    except ccxt.ExchangeNotAvailable as e:
+        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
+    except ccxt.AuthenticationError as e:
+        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        return (str(e) + 'Authentication Error (missing API keys, ignoring)')
+    except ccxt.ExchangeError as e:
+        return (str(e) + 'Exchange Error')
 
 
 
@@ -889,12 +1071,30 @@ def sync_balance(id,Exchange,ChatID):
 def main():
     # bxin=ccxt.bxinth()
     bxin = ccxt.bxinth({
-        'apiKey': 'a9cd1f2e1512',
-        'secret': '551c1810fa4b',
+        'apiKey': '8c9c30602acc',
+        'secret': 'e7906fb559d2',
         "enableRateLimit": True,
     })
     ChatID=259669700
-    print(sync_balance(bxin,'bxinth',str(ChatID)))
+    CK = Get_CoinBlance('bxinth','LTC', str(ChatID))
+    if CK != "faile":
+        for bl in list(CK):
+            coin=(bl[2])
+            total=format_floatc(bl[3],5)
+            used=format_floatc(bl[4],5)
+            free=format_floatc(bl[5],5)
+        print("\n|==Balance "+coin+" ==|\
+                \n  Coin: "+coin+ "\
+                \n  Total:"+total+"\
+                \n  Used:"+used+"\
+                \n  Free:"+free+"\
+                \n|===============|")
+
+    INFO=Update_Balance_Exc('bxinth','THB','THB',5,'buy',"C",str(ChatID))
+    if INFO[0] == True:
+        print(INFO[1])
+    #print(sync_balance_coin(bxin,'bxinth','LTC',str(ChatID)))
+    #print(CK)
     #BXCOIN=['BCH/THB','BTC/THB','LTC/THB']
     #INFO=""
     #for coin in BXCOIN:

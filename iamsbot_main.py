@@ -58,23 +58,28 @@ ORDERSELL = []
 LASTPRICESIM = []
 COINLISTINFO = []
 STRATEGY = []
+ACTION_UPDATE=[]
 CKCLOSE = []
 EX = []
 NOTISTATE_ACTION = []
 UPDATE_ACT = []
 SELL_ORDER = []
+BUY_ORDER=[]
 CKBALANCE = []
+CLOSECON=[]
 menucoinmarkup = {
     'keyboard': [['BACK'], ['BTC', 'BCH','POW'], ['LTC', 'OMG', 'ETH'], ['EVX', 'DASH', 'XZC'], ['GNO', 'REP', 'XRP']]}
 menuexchange = {'keyboard': [['BACK'], ['BXINTH', 'TDAX'], ['BITTREX', 'YOBIT']]}
 mainmenu = {
-'keyboard': [['BUY', 'SELL', 'INFO'], ['BUY ORDER', 'SELL ORDER', 'CANCEL ORDER'], ['NOTIFICATION', 'BALANCE'],
+'keyboard': [['BUY', 'SELL', 'INFO'], ['BUY ORDER', 'SELL ORDER', 'CAN ORDER'], ['NOTIFICATION', 'BALANCE'],
              ['TASK ORDER', 'CANCEL'], ['STRATEGY']]}
-mainmenust = {'keyboard': [['BUY', 'SELL', 'INFO'], ['SELL ORDER', 'CANCEL ORDER'], ['NOTIFICATION', 'STRATEGY'],
-                           ['CLOSE', 'UPDATE']]}
+mainmenust = {'keyboard': [['BUY', 'SELL', 'INFO'], ['BUY ORDER', 'SELL ORDER', 'CAN ORDER'], ['CANCEL', 'STRATEGY'],
+                           ['NEW','CLOSE', 'UPDATE']]}
+selectst = {'keyboard': [['BUY', 'SELL', 'INFO'], ['BUY ORDER', 'SELL ORDER', 'CAN ORDER'], ['CANCEL', 'STRATEGY'],
+                           ['BTS', 'BLS', 'CTS']]}
 mainmenuby = {
 'keyboard': [['BUY', 'SELL', 'INFO'], ['BUY ORDER', 'CANCEL ORDER'], ['NOTIFICATION', 'STRATEGY'], ['CLOSE', 'UPDATE']]}
-mainmenutk = {'keyboard': [['BUY', 'SELL', 'INFO'], ['SELL ORDER', 'CANCEL ORDER'], ['NOTIFICATION', 'STRATEGY'],
+mainmenutk = {'keyboard': [['BUY', 'SELL', 'INFO'], ['BUY ORDER', 'SELL ORDER', 'CAN ORDER'], ['CANCEL', 'STRATEGY'],
                            ['CLOSE', 'UPDATE']]}
 ## Default Stop loss and Cut loss ##
 BuyStopLoss = 5
@@ -87,7 +92,7 @@ BuyStopRisk = 3
 BuyStopBuy = 3
 
 STRATEGY_CHECK = "ON"
-CONTINUE="NO"
+NT=""
 noti_sts = "ON"
 noti_bts = "ON"
 noti_bss = "ON"
@@ -119,6 +124,10 @@ ACT = ""
 ORDER = ""
 simtest = ""
 Coin = ""
+CK1=""
+CK2=""
+CK3=""
+BL=""
 ################### make up keybord stop ######
 stopmarkup = {'keyboard': [['Stop Interactive']]}  ## for build Stop command to telagram
 cancelmarkup = {'keyboard': [[" "], ['CANCEL', 'BACK'], [" "]]}  ## for build cancle command to telagram
@@ -127,8 +136,8 @@ hide_keyboard = {'hide_keyboard': True}
 ###############################################
 ### BXINTH EXCHANGE ###
 bxin = ccxt.bxinth({
-    'apiKey': 'a9cd1f2e1512',
-    'secret': '551c1810fa4b',
+    'apiKey': '8c9c30602acc',
+    'secret': 'e7906fb559d2',
     "enableRateLimit": True,
 })
 #######################
@@ -168,25 +177,58 @@ class YourBot(telepot.Bot):
             pass
         return False
 
+    def clear_strategy(self):
+        STRATEGY.clear()
+        CKLOSS.clear()
+        CKSTOPBUY.clear()
+        CLOSECON.clear()
+
+    def clear_state(self):
+        global CK1
+        global CK2
+        global CK3
+        global ORDER
+        global ACT
+        global CONTINUE
+        global Coin
+        #-----------#
+        BX.clear()
+        CKCOMMAND.clear()
+        COINTEMP.insert(0, "")
+        CKCOMMAND.clear()
+        COINLISTINFO.clear()
+        ORDERBUY.clear()
+        NOTISTATE_ACTION.clear()
+        UPDATE_ACT.clear()
+        SELL_ORDER.clear()
+        BUY_ORDER.clear()
+        NT == "Noti"
+        Coin = ""
+        CK1 = ""
+        CK2 = ""
+        CK3 = ""
+        ORDER = ""
+        ACT = ""
+
     def coin_buysalcan(self, chat_id, bxin, Coin):
         bot.sendChatAction(chat_id, 'typing')
         print("Debug Coin1" + Coin)
         if 'buyCoin' in BX:
             bot.sendMessage(chat_id, str(get_coin_information(bxin, Coin)))
-            Bal = get_balance(bxin, 'THB')
-            if Bal == 201:
-                print("THB is balance not available.!!")
-                bot.sendMessage(chat_id, str("THB Balance Not available.!!"))
+            Bal = get_balance('bxinth','THB',str(chat_id))
+            if Bal == False:
+                print("(THB)  Balance Not Available.!!")
+                bot.sendMessage(chat_id, str("(THB)  Balance Not Available.!!"),reply_markup=mainmenu)
                 BX.clear()
             else:
-                bot.sendMessage(chat_id, "|-- Balance --|\n" + str(Bal))
+                bot.sendMessage(chat_id,str(Bal))
                 bot.sendMessage(chat_id, "How Many to Buy(THB) ?", reply_markup=cancelmarkup)
                 BX.append(Coin)
         elif 'saleCoin' in BX:
-            Bal = get_balance(bxin, Coin)
-            if Bal == 201:
+            Bal = get_balance('bxinth', Coin,str(chat_id))
+            if Bal == False:
                 print(Coin + " Balance Not available.!!")
-                bot.sendMessage(chat_id, str(Coin + " Balance Not available.!!"))
+                bot.sendMessage(chat_id, str(Coin + " Balance Not available.!!"),reply_markup=mainmenu)
                 BX.clear()
             else:
                 bot.sendMessage(chat_id, str(Bal))
@@ -201,6 +243,8 @@ class YourBot(telepot.Bot):
     def coin_buysalcanselect(self, chat_id, bxin, msg, Coin):
         bot.sendChatAction(chat_id, 'typing')
         if msg == "BACK":
+            self.clear_state()
+            self.clear_strategy
             self.coinmenu(chat_id)
         elif msg == "CANCEL":
             return
@@ -263,12 +307,15 @@ class YourBot(telepot.Bot):
 
     def coinmenu(self, chat_id):
         ## Clear Status ##
+       # self.clear_state()
         BX.clear()
         CKCOMMAND.clear()
         ORDERBUY.clear()
         CKBALANCE.clear()
         COINLISTINFO.clear()
         SELL_ORDER.clear()
+        BUY_ORDER.clear()
+
         ##############
         bot.sendMessage(chat_id, "|= EXCTELECOINS MENU  =|\
             \n\U0001F4B5 /buycoin  \
@@ -350,6 +397,7 @@ class YourBot(telepot.Bot):
         global ORDER
         global ACT
         global CONTINUE
+        BL=""
 
         content_type, chat_type, chat_id = telepot.glance(msg)
         content_type, chat_type, chat_id_test = telepot.glance(msg)
@@ -369,11 +417,13 @@ class YourBot(telepot.Bot):
             CK1 = check_sys("echo " + TEXT + "|grep OK")
             CK2 = check_sys("echo " + TEXT + "|grep UPDATE")
             CK3 = check_sys("echo " + TEXT + "|grep CLOSE")
-            #print("Status check =>"+CK1)
+            print("Status check =>"+CK3)
             if str(CK1) != "" or str(CK2) != "" or str(CK3) != "":
                 ACT = check_sys("echo " + TEXT + "|awk -F_ '{print $1}'")
                 ORDER = check_sys("echo " + TEXT + "|awk -F_ '{print $2}'")
                 print("Select Action =>" + ACT + " Order=>" + ORDER)
+
+            print("1.Check Strategy income"+str(STRATEGY))
 
             if msg['text'] == "/setroomtemp" and chat_id not in settingroomtemp:
                 bot.sendChatAction(chat_id, 'typing')
@@ -436,21 +486,10 @@ class YourBot(telepot.Bot):
 
             if msg['text'] == '/cancel' or msg['text'] == "CANCEL":
                 bot.sendChatAction(chat_id, 'typing')
+                self.clear_state()
+                self.clear_strategy()
                 bot.sendMessage(chat_id, "\U00002714 Cancel all action-> OK ")
-                BX.clear()
-                CKCOMMAND.clear()
-                COINTEMP.insert(0, "")
-                CKCOMMAND.clear()
-                COINLISTINFO.clear()
-                CKLOSS.clear()
-                ORDERBUY.clear()
-                STRATEGY.clear()
-                NOTISTATE_ACTION.clear()
-                UPDATE_ACT.clear()
-                SELL_ORDER.clear()
-                STRATEGY.clear()
-                CONTINUE="NO"
-                Coin = ""
+
                 self.coinmenu(chat_id)
             #### SHOW TASK ###
             if msg['text'] == "TASK ORDER" or msg['text'] == "/taskorder":
@@ -464,23 +503,23 @@ class YourBot(telepot.Bot):
                 bot.sendChatAction(chat_id, 'typing')
                 INFO = ""
                 coin = msg['text']
-                if COUNT >= 2:
-                    bot.sendMessage(chat_id, "Over repeat command ,Please wait few second !!")
-                    time.sleep(10)
-                    COUNT = 0
-                ST = get_balance(bxin, "THB")  ## MArket main
-                if ST == 201:
-                    bot.sendMessage(chat_id, "THB Balance Not Available !!")
+                #if COUNT >= 2:
+                #    bot.sendMessage(chat_id, "Over repeat command ,Please wait few second !!")
+                #    time.sleep(10)
+                #    COUNT = 0
+                ST = get_balance('bxinth',"THB",str(chat_id))  ## MArket main
+                if ST == False:
+                    bot.sendMessage(chat_id, "THB Balance Not Available !!",reply_markup=mainmenu)
                 else:
-                    INFO += ("+- Balance Available -+\n" + ST)
+                    INFO +=(ST)
                     #bot.sendMessage(chat_id," Balance Available\n" + ST)
                 #--------------#
-                ST = get_balance(bxin, coin)
-                if ST == 201:
-                    bot.sendMessage(chat_id, coin + " Balance Not Available !!")
+                ST = get_balance('bxinth', coin,str(chat_id))
+                if ST == False:
+                    bot.sendMessage(chat_id, coin + " Balance Not Available !!",reply_markup=mainmenu)
                 else:
-                    INFO += "" + ST
-                    bot.sendMessage(chat_id, INFO)
+                    INFO +=ST
+                    bot.sendMessage(chat_id,INFO)
                 COUNT += 1
                 #print(INFO)
             ########### Allow Take Action BTS####
@@ -1131,17 +1170,34 @@ class YourBot(telepot.Bot):
 
 
             ### SELL ORDER ####
-            if msg['text'] == 'SELL ORDER':
-                bot.sendMessage(chat_id, 'Using for Sell Coin Directly,Support OrderBuy Only !!!',
+            if msg['text'] == 'SELL ORDER' or msg['text'] == 'BUY ORDER':
+                if msg['text'] == 'SELL ORDER':
+                    bot.sendMessage(chat_id, 'Using for Sell Coin Directly,For Support BTS,CTS order !!!',
                                 reply_markup=cancelmarkup)
-                bot.sendMessage(chat_id, 'Enter Your Order:', reply_markup=cancelmarkup)
-                SELL_ORDER.append('SELL')  ## DEV
+                    bot.sendMessage(chat_id, 'Enter Your Order:', reply_markup=cancelmarkup)
+                    SELL_ORDER.append('SELL')  ## DEV
+                if msg['text'] == 'BUY ORDER':
+                    bot.sendMessage(chat_id, 'Using for Sell Coin Directly,For Support BLS order !!!',
+                                    reply_markup=cancelmarkup)
+                    bot.sendMessage(chat_id, 'Enter Your Order:', reply_markup=cancelmarkup)
+                    BUY_ORDER.append('BUY')  ## DEV
+
             elif 'SELL' in SELL_ORDER:
                 Order = msg['text']
                 Order = check_sys("data=" + Order + ";echo ${data#*/}")
                 if is_number(Order) == True:
                     self.sellorder('bxinth', Order, chat_id)
                     SELL_ORDER.clear()
+                else:
+                    bot.sendMessage(chat_id, "Enter Number only !!\n Enter Your Order:", reply_markup=cancelmarkup)
+            #####################
+
+            elif 'BUY' in BUY_ORDER:
+                Order = msg['text']
+                Order = check_sys("data=" + Order + ";echo ${data#*/}")
+                if is_number(Order) == True:
+                    self.buyorder('bxinth', Order, chat_id)
+                    BUY_ORDER.clear()
                 else:
                     bot.sendMessage(chat_id, "Enter Number only !!\n Enter Your Order:", reply_markup=cancelmarkup)
 
@@ -1176,6 +1232,8 @@ class YourBot(telepot.Bot):
 
             if 'BXINTH' in EX and '/buycoin' in CKCOMMAND or 'BXINTH' in EX and "BUY" in CKCOMMAND:
                 bot.sendChatAction(chat_id, 'typing')
+                #global NT
+                NT == ""
                 BX.append('bxinth')
                 BX.append('buyCoin')
                 self.coinbx(chat_id)
@@ -1183,6 +1241,7 @@ class YourBot(telepot.Bot):
                 EX.clear()
             elif 'BXINTH' in EX and '/salecoin' in CKCOMMAND or 'BXINTH' in EX and "SELL" in CKCOMMAND:
                 bot.sendChatAction(chat_id, 'typing')
+                NT == ""
                 BX.append('bxinth')
                 BX.append('saleCoin')
                 self.coinbx(chat_id)
@@ -1219,6 +1278,7 @@ class YourBot(telepot.Bot):
 
             if msg['text'] == '/SELL' or msg['text'] == '/BUY' and 'bxinth' in BX or 'Cancel' in BX:
                 Coin = COINTEMP[0]
+                NT == ""
                 ST = ""
                 Order = msg['text']
                 Order = check_sys("data=" + Order + ";echo ${data#*/}")
@@ -1231,7 +1291,7 @@ class YourBot(telepot.Bot):
                         if ST == True:
                             bot.sendMessage(chat_id, "Cancel Order \"" + str(Order) + "\" => Completed",
                                             reply_markup=mainmenu)
-                            time.sleep(2)
+                            time.sleep(1)
                     else:
                         Update_OpenOrder(Order, 'bxinth', 'close')
                         if simtest == "yes":
@@ -1241,20 +1301,22 @@ class YourBot(telepot.Bot):
                         if ST == True:
                             bot.sendMessage(chat_id, "Cancel Order \"" + str(Order) + "\" => Completed",
                                             reply_markup=mainmenu)
-                            time.sleep(2)
+                            time.sleep(1)
                             # else:
                             # bot.sendMessage(chat_id,"Not found order to database,clear this order !!")
                 if msg['text'] == '/BUY' or 'Cancel' in BX and '/BUY' in CKCOMMAND:
-                    ST = Get_BittrexOpen_Order('bxinth', 'buy', Coin)
+                    ST = Get_OpenOrder('bxinth', 'open')
                     Type = "buy"
                     CKCOMMAND.append('/BUY')
                 if msg['text'] == '/SELL' or 'Cancel' in BX and '/SELL' in CKCOMMAND:
-                    ST = Get_BittrexOpen_Order('bxinth', 'sell', Coin)
+                    ST = Get_OpenOrder('bxinth', 'open')
+                    print("DEBUG ST CANCEL ORDER "+str(ST))
                     Type = "sell"
                     CKCOMMAND.append('/SELL')
-                if (str(ST)) == "failed" or (str(ST)) == "()":
+                if (str(ST)) == "Failed" or (str(ST)) == "()":
                     # bot.sendMessage(chat_id, "Order \"" + Type + "\" in " + Coin + " is Clear")
                     bot.sendMessage(chat_id, "Order is empty !!... ")
+                    time.sleep(4)
                     CKCOMMAND.clear()
                     BX.clear()
                     COINTEMP.insert(0, "")
@@ -1271,7 +1333,7 @@ class YourBot(telepot.Bot):
                         Can += ("OrderID:/" + order_id + "\nCoin:" + coin + "\nRate:" + str(rate) + "\nQty:" + str(
                             qty) + "\nTotal:" + str(total) + "\n ------------- \n")
                     bot.sendMessage(chat_id, str(Can))
-                    bot.sendMessage(chat_id, "Enter OrderId ", reply_markup=cancelmarkup)
+                    bot.sendMessage(chat_id, "Enter OrderId:", reply_markup=cancelmarkup)
                     BX.append('Cancel')
 
             if 'bxinth' in BX and 'SELL' in BX:
@@ -1281,28 +1343,19 @@ class YourBot(telepot.Bot):
                 Rate = check_sys("data=" + Rate + ";echo ${data#*/}")
                 print("DEBUG1:Rate price" + str(Rate))
                 if is_number(Rate) == True and Rate != "0":
-                    Oid = (sale_coin_res(Coin, float(Sell), float(Rate), 'bxinth'))  ## Open order sell temporary
+                    BL = Update_Balance_Exc('bxinth', Coin, 'THB', float(Sell), 'sell',"O", str(chat_id))
+                    if BL[0] != True:
+                        bot.sendMessage(chat_id, BL[1])
+                    else:
+                        Oid = (sale_coin_res(Coin, float(Sell), float(Rate), 'bxinth'))  ## Open order sell temporary
                     if Oid == None:
                         Oid = 0
-                    if is_number(Oid) == True:  ## Test
+                    if is_number(Oid) == True and BL[0] == True:  ## Test
                         bot.sendMessage(chat_id, "Sell:" + Coin + "\nAmount:" + str(Sell) + "  \nRate:" + str(
                             Rate) + " Bath \n")
                         bot.sendMessage(chat_id, "Open Order " + str(Oid) + " --> Successfully")
-
-                        ## Check Balance after Order ##
-                        if simtest != "yes":
-                            symbol = check_sys("data=" + Coin + ";echo ${data%/*}")
-                            Bal = get_balance(bxin, symbol)
-                            if Bal == 201:
-                                print(symbol + " Balance Not Available.!!")
-                                bot.sendMessage(chat_id, str(symbol + " Balance Not Available.!!"))
-                                BX.clear()
-
-                            else:
-                                bot.sendMessage(chat_id, str(Bal))
-
-                            CKCOMMAND.clear()
-                            BX.clear()
+                        CKCOMMAND.clear()
+                        BX.clear()
                     else:
                         bot.sendMessage(chat_id, Oid)
                         CKCOMMAND.clear()
@@ -1327,29 +1380,34 @@ class YourBot(telepot.Bot):
                     print("Rate1 " + str(Rate))
                     print("Coin1" + str(Coin))
                     print("Buy" + str(Buy))
-                    if simtest != "yes":
-                        Bal = (get_balance(bxin,'THB'))
-                        if Bal == 201:
-                            bot.sendMessage(chat_id, str("Money(THB) Balance Not Available.!!"))
-                            BX.clear()
-                            ORDERBUY.clear()
-                            STRATEGY.clear()
+                    BL = Update_Balance_Exc('bxinth', 'THB', 'THB', float(Buy), 'buy',"O", str(chat_id))
+                    if BL[0] != True:
+                        bot.sendMessage(chat_id,BL[1])
+                        BX.clear()
+                        ORDERBUY.clear()
+                        #STRATEGY.clear()
                         ## Return 201 if balance avireble
-
-
-                    if "CutlossShadows" in STRATEGY and Bal != 201:
+                    if "bls" in STRATEGY and BL[0] == True :
                         Oid = (buy_coin_res(Coin, float(Buy), float(Rate), 'bxinth'))
                         print("Buy Coin BLS-->" + Oid)
-                        #STRATEGY.clear()
                     else:
-                        bot.sendMessage(chat_id, "Processing .. ")
-                        time.sleep(6)
-                        if simtest == "yes":
+                        if simtest == "yes" and BL[0] == True:
+                            bot.sendMessage(chat_id, "Buy under Processing .. ")
                             Oid = (buy_coin_sim(Coin, float(Buy), float(Rate), 'bxinth'))
-                        else:
+                            time.sleep(3)
+                        elif simtest != "yes" and BL[0] == True:
+                            bot.sendMessage(chat_id, "Buy under Processing .. ")
                             Oid = (buy_coin(bxin, Coin, float(Buy), float(Rate), 'bxinth'))
+                            time.sleep(3)
+                            if is_number(Oid) == True:  ## Sync Balance coin only ###
+                                INFO = sync_balance_coin(bxin,'bxinth',Coin, chat_id)
+                                print(INFO)
+                                if INFO != "":  ## Return Error ##
+                                    print(INFO)
+                                    bot.sendMessage(chat_id,INFO)
+
                     print("Order ID:" + str(Oid))
-                    if is_number(Oid) == True:  ## Test
+                    if is_number(Oid) == True and BL[0] == True:  ## Test
                         bot.sendMessage(chat_id, "|= Result =|\
                                 \nOrder:" +str(Oid) + "\
                                 \nBuy:" + Coin + "\
@@ -1361,10 +1419,11 @@ class YourBot(telepot.Bot):
                         ORDERBUY.append(Buy)
                         ORDERBUY.append(Rate)
                         ORDERBUY.append(str(format_float(float(Buy) / float(Rate))))
+                        NT == "Noti"
                     elif Oid != "":
                          bot.sendMessage(chat_id,"Exchange Error =>"+str(Oid))
 
-                    if Bal != 201 and is_number(Oid) == True:
+                    if BL[0] == True and is_number(Oid) == True:
                         bot.sendMessage(chat_id, "Open Order " + str(Oid) + "  --> Successfully")
                         BX.clear()
                         # bot.sendMessage(chat_id,"Enter /buyCoin command for continue trading ..")
@@ -1498,99 +1557,323 @@ class YourBot(telepot.Bot):
             ### STRATEGY #####
             if msg['text'] == '/strategy' or msg['text'] == "STRATEGY":
                 bot.sendChatAction(chat_id, 'typing')
-                #bot.sendMessage(chat_id, "|== STRATEGY ==|\
-                #    \n /StopsShadows \
-                #     \n /CutlossShadows")
+               # self.clear_state()
                 bot.sendMessage(chat_id,"|== STRATEGY ==| \
                    \n/BTS \
                    \n/BLS \
-                   \n/CTS "
-                    )
+                   \n/CTS ",reply_markup=selectst)
 
-            elif msg['text'] == "/BTS" or msg['text'] == "/BLS" or msg['text'] == "/CTS":
+            elif msg['text'] == "/BTS" or msg['text'] == "/BLS" or msg['text'] == "/CTS" or \
+                msg['text'] == "BTS" or msg['text'] == "BLS" or msg['text'] == "CTS":
+                bot.sendChatAction(chat_id, 'typing')
                 global SellStopLoss
                 global SellCutLoss
                 global BuyStopLoss
                 global BuyCutLoss
-                bot.sendChatAction(chat_id, 'typing')
-                if msg['text'] == '/BTS':
+                NT == ""
+                BL=""
+                self.clear_strategy()
+                if msg['text'] == '/BTS' or msg['text'] == 'BTS':
                     bot.sendMessage(chat_id, "|==BTS MENU==| \
                         \n/NEW\
                         \n/CLOSE\
-                        \n/UPDATE")
+                        \n/UPDATE",reply_markup=mainmenust)
                     STRATEGY.append("bts")
-                if msg['text'] == "/BLS":
+                if msg['text'] == "/BLS" or msg['text'] == "BLS":
                     bot.sendMessage(chat_id, "|==BLS MENU==| \
                         \n/NEW\
                         \n/CLOSE\
-                        \n/UPDATE")
+                        \n/UPDATE0",reply_markup=mainmenust)
                     STRATEGY.append("bls")
-                if msg['text'] == "/CTS":
+                if msg['text'] == "/CTS" or msg['text'] == "CTS":
                     bot.sendMessage(chat_id, "|==CTS MENU==| \
                         \n/NEW\
                         \n/CLOSE\
-                        \n/UPDATE")
+                        \n/UPDATE",reply_markup=mainmenust)
                     STRATEGY.append("cts")
                 ## BTS,STS NEW ORDER ##
             elif msg['text'] == "/NEW" and "bts" in STRATEGY or msg[\
-                'text'] == "/NEW" and "cts" in STRATEGY or msg['text'] == "/NEW" and "bls" in STRATEGY:
+                'text'] == "/NEW" and "cts" in STRATEGY or msg['text'] == "/NEW" and "bls" in STRATEGY or \
+                msg['text'] == "NEW" and "bts" in STRATEGY or msg[ 'text'] == "NEW" and "cts" in STRATEGY \
+                or msg['text'] == "NEW" and "bls" in STRATEGY:
                 if "bts" in STRATEGY:
-                    bot.sendMessage(chat_id, 'Enter BTS Cut loss(%)', reply_markup=cancelmarkup)
+                    bot.sendMessage(chat_id, 'Enter BTS Cut loss(%):', reply_markup=cancelmarkup)
                     CKLOSS.append('ckloss_buy')
                 if "cts" in STRATEGY:
-                    bot.sendMessage(chat_id, 'Enter CTS Cut loss(%)', reply_markup=cancelmarkup)
+                    bot.sendMessage(chat_id, 'Enter CTS Cut loss(%):', reply_markup=cancelmarkup)
                     CKLOSS.append('ckloss_sell')
                 if "bls" in STRATEGY:
-                    bot.sendMessage(chat_id, 'Enter BLS StopRisk(%)', reply_markup=cancelmarkup)
+                    bot.sendMessage(chat_id, 'Enter BLS StopRisk(%):', reply_markup=cancelmarkup)
                     CKSTOPBUY.append('ckstop_risk')
+
             ##BTS,STS UPDATE ORDER ##
-            elif msg['text'] == "/UPDATE" and "bts" in STRATEGY or msg[\
-                'text'] == "/UPDATE" and "cts" in STRATEGY or msg['text'] == "/UPDATE" and "bls" in STRATEGY:
+            elif "UPDATE_NOW" in STRATEGY:
+                INFO = ""
+                print("3.Check Strategy income" + str(STRATEGY))
+                COUNT = 0
+                Order = msg['text']
+                Uid = check_sys("data=" + Order + ";echo ${data#*/}")
+                print("Order ID " + Uid)
+                if is_number(Uid) == True:
+                    if "stoploss_sell" in STRATEGY:
+                        INFO = ""
+                        ST1 = Update_StopLoss(Uid, 'bxinth', SellStopLoss)
+                        ST2 = Update_CutLoss(Uid, 'bxinth', SellCutLoss)
+                        if ST1 == "OK" and ST2 == "OK":
+                            bot.sendMessage(chat_id, "Update New value Completed !!", reply_markup=mainmenu)
+                            SS = Get_OrderSale('bxinth', 'sell')
+                            for order in list(SS):
+                                Time = (order[1])
+                                order_id = (order[0])
+                                coin = (order[2])
+                                rate = (order[4])
+                                qty = (order[3])
+                                if order_id != Uid:
+                                    continue
+                                else:
+                                    INFO += ("\n(" + str(COUNT) + ")Update Trader CTS New!!")
+                                    INFO += ("\n" + Time + "\
+                                        \nOrder:/" + str(order_id) + "\
+                                        \nCoin:" + coin + "\
+                                        \nQty:" + str(qty) + "\
+                                        \nRate:" + str(rate))
+                                    volumn = format_float(qty / rate)
+                                    INFO += ("\nVolumn:" + volumn)
+                                    StopLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Stoploss')
+                                    CutLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Cutloss')
+                                    INFO += ("\nStopLoss:" + str(StopLoss) + " %")
+                                    INFO += ("\nCutLoss:" + str(CutLoss) + " %")
+                                    INFO += ("\n-------------------")
+                                    bot.sendMessage(chat_id, INFO)
+                                    STRATEGY.clear()
+                        else:
+                            bot.sendMessage(chat_id, "Update New value Failed !!", reply_markup=mainmenu)
+                    elif "stoploss_buy" in STRATEGY:
+                        INFO = ""
+                        ST1 = Update_StopLoss(Uid, 'bxinth', BuyStopLoss)
+                        ST2 = Update_CutLoss(Uid, 'bxinth', BuyCutLoss)
+                        if ST1 == "OK" and ST2 == "OK":
+                            bot.sendMessage(chat_id, "Update New value Completed !!", reply_markup=mainmenu)
+                            SS = Get_OrderBuy('bxinth', 'buy')
+                            for order in list(SS):
+                                Time = (order[1])
+                                order_id = (order[0])
+                                coin = (order[2])
+                                rate = (order[4])
+                                qty = (order[3])
+                                if order_id != Uid:
+                                    continue
+                                else:
+                                    print("Order ID Update " + Uid)
+                                    INFO += ("\n(" + str(COUNT) + ")Update Trader BTS New!!\nCoin:" + coin)
+                                    INFO += ("\n" + Time + "\
+                                            \nid:/" + str(order_id) + "\
+                                            \nCoin:" + coin + "\
+                                            \nQty:" + str(qty) + "\
+                                            \nRate:" + str(rate))
+                                    volumn = format_float(qty / rate)
+                                    INFO += ("\nVolumn:" + volumn)
+                                    StopLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Stoploss')
+                                    CutLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Cutloss')
+                                    INFO += ("\nStopLoss:" + str(StopLoss) + " %")
+                                    INFO += ("\nCutLoss:" + str(CutLoss) + " %")
+                                    INFO += ("\n-------------------")
+                                    bot.sendMessage(chat_id, INFO)
+                                    STRATEGY.clear()
+                    elif "ckstop_buy" in STRATEGY:
+                        INFO = ""
+                        ST1 = Update_StopRisk(Uid, 'bxinth', BuyStopRisk)
+                        ST2 = Update_StopBuy(Uid, 'bxinth', BuyStopBuy)
+                        if ST1 == "OK" and ST2 == "OK":
+                            bot.sendMessage(chat_id, "Update (BLS)New value Completed !!", reply_markup=mainmenu)
+                            SS = Get_OrderStopBuy('bxinth', 'buy')
+                            for order in list(SS):
+                                Time = (order[1])
+                                order_id = (order[0])
+                                coin = (order[2])
+                                rate = (order[4])
+                                qty = (order[3])
+                                if order_id != Uid:
+                                    continue
+                                else:
+                                    print("Order ID Update " + Uid)
+                                    INFO += ("\n(" + str(COUNT) + ")Update Trader(BLS) New!!\nCoin:" + coin)
+                                    INFO += ("\n" + Time + "\
+                                                    \nid:/" + str(order_id) + "\
+                                                    \nCoin:" + coin + "\
+                                                    \nQty:" + str(qty) + "\
+                                                    \nRate:" + str(rate))
+                                    volumn = format_float(qty / rate)
+                                    INFO += ("\nVolumn:" + volumn)
+                                    BuyStopRisk = Get_BittrexDB(order_id, 'bxinth', 'ckstopbuy', 'StopRisk')
+                                    BuyStopBuy = Get_BittrexDB(order_id, 'bxinth', 'ckstopbuy', 'StopBuy')
+                                    INFO += ("\nStopRisk:" + str(BuyStopRisk) + " %")
+                                    INFO += ("\nStopBuy:" + str(BuyStopBuy) + " %")
+                                    INFO += ("\n-------------------")
+                                    bot.sendMessage(chat_id, INFO)
+                                    STRATEGY.clear()
+                    else:
+                        bot.sendMessage(chat_id, "Update New value Failed !!", reply_markup=mainmenu)
+
+                else:
+                    bot.sendMessage(chat_id, "Error Not found Uid !!")
+
+
+            elif msg['text'] == "/UPDATE" and "bts" in STRATEGY or msg['text'] == "/UPDATE" and "cts" in STRATEGY \
+                    or msg['text'] == "/UPDATE" and "bls" in STRATEGY or msg['text'] == "UPDATE" and "bts" in STRATEGY \
+                    or msg['text'] == "UPDATE" and "cts" in STRATEGY or msg['text'] == "UPDATE" and "bls" in STRATEGY:
+
 
                 if "bts" in STRATEGY:
                     SS = Get_OrderBuy('bxinth', 'buy')
                     print("OrderBuy => " + str(SS))
                     if str(SS) == "()":
                         bot.sendMessage(chat_id, "Not found Order for update !!! ..", reply_markup=mainmenu)
+                        time.sleep(2)
                         self.coinmenu(chat_id)
                         STRATEGY.clear()
+
                     else:
                         bot.sendMessage(chat_id, 'Enter BTS Cut loss(%)', reply_markup=cancelmarkup)
                         CKLOSS.append('ckloss_buy')
-                        STRATEGY.clear()
+                        #STRATEGY.clear()
                         STRATEGY.append('bts_update')
                 if  "cts" in STRATEGY:
                     SS = Get_OrderSale('bxinth', 'sell')
                     print("OrderSell =>" + str(SS))
                     if str(SS) == "()":
                         bot.sendMessage(chat_id, "Not found Order for update !!! ..", reply_markup=mainmenu)
+                        time.sleep(2)
                         self.coinmenu(chat_id)
                         STRATEGY.clear()
+
                     else:
                         bot.sendMessage(chat_id, 'Enter CTS Cut loss(%)', reply_markup=cancelmarkup)
                         CKLOSS.append('ckloss_sell')
-                        STRATEGY.clear()
+                        #STRATEGY.clear()
                         STRATEGY.append('cts_update')
                 if "bls" in STRATEGY:
                     SS = Get_OrderStopBuy('bxinth', 'buy')
                     print("OrderBLS =>" + str(SS))
                     if str(SS) == "()":
                         bot.sendMessage(chat_id, "Not found Order for update !!! ..", reply_markup=mainmenu)
+                        time.sleep(2)
                         self.coinmenu(chat_id)
                         STRATEGY.clear()
+
                     else:
                         bot.sendMessage(chat_id, 'Enter BLS StopRisk(%)', reply_markup=cancelmarkup)
                         CKSTOPBUY.append('ckstop_risk')
-                        STRATEGY.clear()
+                       # STRATEGY.clear()
                         STRATEGY.append('bls_update')
 
 
             ##BTS,STS CLOSE ORDER ##
-            elif msg['text'] == "/CLOSE" and "bts" in STRATEGY or msg[ \
-                    'text'] == "/CLOSE" and "cts" in STRATEGY or msg['text'] == "/CLOSE" and "bls" in STRATEGY \
-                    or CONTINUE == "YES":
+            elif "CLOSE_NOW" in STRATEGY or msg['text'] == "/NO":
+                COUNT=0
+                Order = msg['text']
+                Uid = check_sys("data=" + Order + ";echo ${data#*/}")
+                if is_number(Uid) == True and 'close_bls' in CKSTOPBUY:
+                    CKBL = Get_OrderStopBuy('bxinth', 'buy')
+                    for order in list(CKBL):
+                        order_id = (order[0])
+                        coin = (order[2])
+                        qty = (order[3])
+                        if order_id == Uid:
+                            #DEV113
+                            BL = Update_Balance_Exc('bxinth','THB', 'THB', float(qty), 'buy', "C", str(chat_id))
+                            break
+                    if BL[0] == True:
+                        CK = Update_OrderStopBuy(Uid, 'bxinth', 'close')
+                    if CK == "OK":
+                        bot.sendMessage(chat_id, "Close Order BLS\nOrder:" + str(Uid) + "\nStatus is Completed !!",
+                                        reply_markup=cancelmarkup)
+                        bot.sendMessage(chat_id, "Continue  to Close Order or,not?\n/YES\n/NO")
+                        STRATEGY.clear()
+                        CLOSECON.clear()
+                        STRATEGY.append('bls')
+                        CLOSECON.append("YES")
+                    else:
+                        bot.sendMessage(chat_id, "Update database to close order " +str(order_id) + " " + CK + "")
+                        STRATEGY.clear()
+                        CLOSECON.clear()
+                elif is_number(Uid) == True and 'close_bts' in CKSTOPBUY:
+                    CKBL = Get_OrderBuy('bxinth', 'buy')
+                    for order in list(CKBL):
+                        order_id = (order[0])
+                        coin = (order[2])
+                        qty = (order[3])
+                        if order_id == Uid:
+                            #DEV113
+                            BL = Update_Balance_Exc('bxinth','THB', 'THB', float(qty), 'buy', "C", str(chat_id))
+                            break
+                    if BL[0] == True:
+                        CK = Update_OrderBuy(Uid, 'bxinth', 'close')
+                    if CK == "OK":
+                        bot.sendMessage(chat_id, "Close Order BTS\nOrder: " +str(Uid) + "\nStatus is Completed !!",
+                                        reply_markup=cancelmarkup)
+                        bot.sendMessage(chat_id, "Continue to Close Order or,not?\n/YES\n/NO")
+                        STRATEGY.clear()
+                        CLOSECON.clear()
+                        STRATEGY.append('bts')
+                        CLOSECON.append("YES")
+                    else:
+                        bot.sendMessage(chat_id, "Update database to close order " +str(order_id) + " " + CK + "")
+                        STRATEGY.clear()
+                        CLOSECON.clear()
+                elif is_number(Uid) == True and 'close_cts' in CKSTOPBUY:
+                    CKBL = Get_OrderSale('bxinth', 'sell')
+                    for order in list(CKBL):
+                        # Time = (order[1])
+                        order_id = (order[0])
+                        coin = (order[2])
+                        rate = (order[4])
+                        qty = (order[3])
+                        if order_id == Uid:
+                            #DEV113
+                            volumn_st = format_floatc((qty/rate), 4)
+                            BL = Update_Balance_Exc('bxinth', coin, 'THB', float(volumn_st), 'sell', "C", str(chat_id))
+                            break
+                    if BL[0] == True:
+                        CK = Update_OrderSale(Uid, 'bxinth', 'close')
+                    if CK == "OK":
+                        bot.sendMessage(chat_id, "Close Order CTS\nOrder:" +str(Uid) + "\nStatus is Completed !!",
+                                        reply_markup=cancelmarkup)
+                        bot.sendMessage(chat_id, "Continue to Close Order or,not?\n/YES,\n/NO")
+                        STRATEGY.clear()
+                        CLOSECON.clear()
+                        CLOSECON.append("YES")
+                        STRATEGY.append('cts')
+                    else:
+                        bot.sendMessage(chat_id, "Update database to close order " + str(order_id) + " " + CK + "")
+                        STRATEGY.clear()
+                        CLOSECON.clear()
+
+                elif 'cts' in STRATEGY and msg['text'] == "/YES":
+                    # CLOSECON.clear()
+                    CLOSECON.append("YES")
+                    CLOSECON.append('cts')
+                elif 'bts' in STRATEGY and msg['text'] == "/YES":
+                    CLOSECON.append("YES")
+                    CLOSECON.append('bts')
+                elif 'bls' in STRATEGY and msg['text'] == "/YES":
+                    CLOSECON.append("YES")
+                    CLOSECON.append('bls')
+                elif 'cts' in STRATEGY and msg['text'] == "/NO" or 'bls' in STRATEGY and msg['text'] == "/NO" \
+                        or 'bts' in STRATEGY and msg['text'] == "/NO":
+                    CLOSECON.clear()
+                    STRATEGY.clear()
+                    bot.sendMessage(chat_id, "OK !!", reply_markup=mainmenu)
+
+
+            elif msg['text'] == "/CLOSE" and "bts" in STRATEGY or msg['text'] == "/CLOSE" \
+                    and "cts" in STRATEGY or msg['text'] == "/CLOSE" and "bls" in STRATEGY \
+                    or "YES" in CLOSECON or msg['text'] == "CLOSE" and "bts" in STRATEGY \
+                    or msg[ 'text'] == "CLOSE" and "cts" in STRATEGY or msg['text'] == "CLOSE" \
+                    and "bls" in STRATEGY or "YES" in CLOSECON:
 
                 if "bts" in STRATEGY:
+                    COUNT+=1
                     INFO=""
                     SS = Get_OrderBuy('bxinth', 'buy')
                     print("OrderBuy => " + str(SS))
@@ -1601,6 +1884,8 @@ class YourBot(telepot.Bot):
                         STRATEGY.clear()
 
                     else:
+                        COUNT=0
+                        COUNT+=1
                         bot.sendMessage(chat_id, 'Close Order BTS as Below !!', reply_markup=cancelmarkup)
                         SS = Get_OrderBuy('bxinth', 'buy')
                         for order in list(SS):
@@ -1611,7 +1896,7 @@ class YourBot(telepot.Bot):
                             qty = (order[3])
                             StopLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Stoploss')
                             CutLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Cutloss')
-                            INFO += ("\nTrader BTS " + coin)
+                            INFO += ("\n("+str(COUNT)+")Trader BTS " + coin)
                             INFO += ("\n" + Time + "\
                                             \nid:/" + str(order_id) + "\
                                             \nCoin:" + coin + "\
@@ -1623,7 +1908,8 @@ class YourBot(telepot.Bot):
                             INFO += ("\nCutLoss:" + str(CutLoss) + " %")
                             bot.sendMessage(chat_id,INFO)
                             INFO=""
-                        STRATEGY.clear()
+                            COUNT += 1
+                        #STRATEGY.clear()
                         STRATEGY.append("CLOSE_NOW")
                         bot.sendMessage(chat_id, "Enter Order ID:")
                         CKSTOPBUY.clear()
@@ -1631,6 +1917,7 @@ class YourBot(telepot.Bot):
                         ORDERBUY.clear()
 
                 if "cts" in STRATEGY:
+                    COUNT+=1
                     INFO=""
                     SS = Get_OrderSale('bxinth', 'sell')
                     print("OrderSell =>" + str(SS))
@@ -1651,7 +1938,7 @@ class YourBot(telepot.Bot):
                             qty = (order[3])
                             StopLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Stoploss')
                             CutLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Cutloss')
-                            INFO += ("\nTrader CTS " + coin)
+                            INFO += ("\n("+str(COUNT)+")Trader CTS " + coin)
                             INFO += ("\n" + Time + "\
                                         \nid:/" + str(order_id) + "\
                                         \nCoin:" + coin + "\
@@ -1663,14 +1950,17 @@ class YourBot(telepot.Bot):
                             INFO += ("\nCutLoss:" +str(CutLoss)+" %")
                             bot.sendMessage(chat_id, INFO)
                             INFO=""
-                        STRATEGY.clear()
+                            COUNT += 1
+                       # STRATEGY.clear()
                         STRATEGY.append("CLOSE_NOW")
                         bot.sendMessage(chat_id, "Enter Order ID:")
                         CKSTOPBUY.clear()
                         CKSTOPBUY.append('close_cts')
                         ORDERBUY.clear()
+                print("Close Now" + str(STRATEGY))
 
                 if "bls" in STRATEGY:
+                    COUNT +=1
                     INFO=""
                     SS = Get_OrderStopBuy('bxinth', 'buy')
                     print("OrderBLS =>" + str(SS))
@@ -1689,7 +1979,7 @@ class YourBot(telepot.Bot):
                             coin = (order[2])
                             rate = (order[4])
                             qty = (order[3])
-                            INFO += ("\nTrader BLS " + coin)
+                            INFO += ("\n("+str(COUNT)+")Trader BLS " + coin)
                             INFO += ("\n" + Time + "\
                                     \nid:/" + str(order_id) + "\
                                     \nCoin:" + coin + "\
@@ -1700,59 +1990,27 @@ class YourBot(telepot.Bot):
                             ##DEV113
                             BuyStopRisk = Get_BittrexDB(order_id, 'bxinth', 'ckstopbuy', 'StopRisk')
                             BuyStopBuy = Get_BittrexDB(order_id, 'bxinth', 'ckstopbuy', 'StopBuy')
-                            INFO += ("\nStopRisk:" + str(StopRisk) + " %")
-                            INFO += ("\nStopBuy:" + str(StopBuy) + " %")
+                            INFO += ("\nStopRisk:" + str(BuyStopRisk) + " %")
+                            INFO += ("\nStopBuy:" + str(BuyStopBuy) + " %")
                             INFO += ("\n----------------------")
                             bot.sendMessage(chat_id, INFO)
                             INFO=""
-                        STRATEGY.clear()
+                            COUNT += 1
+                        #STRATEGY.clear()
                         STRATEGY.append("CLOSE_NOW")
                         bot.sendMessage(chat_id, "Enter Order ID:")
                         CKSTOPBUY.clear()
                         CKSTOPBUY.append('close_bls')
                         ORDERBUY.clear()
 
-            elif "CLOSE_NOW" in STRATEGY:
-                Order = msg['text']
-                Uid = check_sys("data=" + Order + ";echo ${data#*/}")
-                print("Order ID " + Uid)
-                if is_number(Uid) == True and 'close_bls' in CKSTOPBUY:
-                    CK=Update_OrderStopBuy(Uid,'bxinth','close')
-                    if CK == "OK":
-                        bot.sendMessage(chat_id,"Close Order BLS\nOrder:"+Uid+"\nStatus is Completed !!",reply_markup=cancelmarkup)
-                        bot.sendMessage(chat_id, "Continue close order or,not?\n/YES\n/NO")
-                        STRATEGY.append('bls')
-                        CONTINUE="YES"
-                elif is_number(Uid) == True and 'close_bts' in CKSTOPBUY:
-                    CK = Update_OrderBuy(Uid, 'bxinth', 'close')
-                    if CK == "OK":
-                        bot.sendMessage(chat_id, "Close Order BTS\nOrder: " + Uid + "\nStatus is Completed !!",reply_markup=cancelmarkup)
-                        bot.sendMessage(chat_id, "Continue close order or,not?\n/YES\n/NO")
-                        STRATEGY.append('bts')
-                        CONTINUE="YES"
-                elif is_number(Uid) == True and 'close_cts' in CKSTOPBUY:
-                    CK = Update_OrderSale(Uid, 'bxinth', 'close')
-                    if CK == "OK":
-                        bot.sendMessage(chat_id, "Close Order CTS\nOrder:" + Uid + "\nStatus is Completed !!",reply_markup=cancelmarkup)
-                        bot.sendMessage(chat_id,"Continue close order or,not?\n/YES\n/NO")
-                        STRATEGY.append('cts')
-                elif 'cts' in STRATEGY and msg['text'] == "/YES":
-                    CONTINUE = "YES"
-                elif 'bts' in STRATEGY and msg['text'] == "/YES":
-                    CONTINUE = "YES"
-                elif 'bls' in STRATEGY and msg['text'] == "/YES":
-                    CONTINUE = "YES"
-                elif 'cts' in STRATEGY and msg['text'] == "/NO" or 'bls' in STRATEGY and msg['text'] == "/NO" \
-                        or 'bts' in STRATEGY and msg['text'] == "/NO":
-                    CONTINUE="NO"
-                    STRATEGY.clear()
+            ### END CLOSE NOW ###
 
 
             ####### BLS ##########
             elif 'ckstop_risk' in CKSTOPBUY:
                 StopRisk = msg['text']
                 if is_number(StopRisk) == True:
-                    bot.sendMessage(chat_id, "Enter StopBuy(%)", reply_markup=cancelmarkup)
+                    bot.sendMessage(chat_id, "Enter BLS StopBuy(%)", reply_markup=cancelmarkup)
                     CKSTOPBUY.remove('ckstop_risk')
                     CKSTOPBUY.append('ckstop_buy')
                 else:
@@ -1760,13 +2018,12 @@ class YourBot(telepot.Bot):
                         \nEnter StopRisk(%)', reply_markup=cancelmarkup)
                     #STRATEGY.clear()
                     ## Dev112
-            elif 'ckstop_buy' in CKSTOPBUY and "bls_update" in STRATEGY:  ## Update value
+            elif "ckstop_buy" in CKSTOPBUY and "bls_update" in STRATEGY:  ## Update value
                 INFO = ""
                 StopBuy=msg['text']
                 if is_number(StopBuy) == True:
                     BuyStopRisk = StopRisk
                     BuyStopBuy = StopBuy
-
                     bot.sendMessage(chat_id, "Apply BLS to New order \
                                \n(%)StopRisk:" + str(BuyStopRisk) + " \
                                \n(%)StopBuy:" + str(BuyStopBuy) + " \
@@ -1780,7 +2037,7 @@ class YourBot(telepot.Bot):
                     coin = (order[2])
                     rate = (order[4])
                     qty = (order[3])
-                    INFO += ("\nTrader BLS " + coin)
+                    INFO += ("\n("+str(COUNT)+")Trader BLS " + coin)
                     INFO += ("\n" + Time + "\
                         \nid:/" + str(order_id) + "\
                         \nCoin:" + coin + "\
@@ -1789,10 +2046,10 @@ class YourBot(telepot.Bot):
                     volumn = format_float(qty / rate)
                     INFO += ("\nVolumn: " + volumn)
                     ##DEV113
-                    BuyStopRisk = Get_BittrexDB(order_id, 'bxinth', 'ckstopbuy', 'StopRisk')
-                    BuyStopBuy = Get_BittrexDB(order_id, 'bxinth', 'ckstopbuy', 'StopBuy')
-                    INFO += ("\nStopRisk:" + str(StopRisk) + " %")
-                    INFO += ("\nStopBuy:" + str(StopBuy) + " %")
+                    OStopRisk = Get_BittrexDB(order_id, 'bxinth', 'ckstopbuy', 'StopRisk')
+                    OStopBuy = Get_BittrexDB(order_id, 'bxinth', 'ckstopbuy', 'StopBuy')
+                    INFO += ("\nStopRisk:" + str(OStopRisk) + " %")
+                    INFO += ("\nStopBuy:" + str(OStopBuy) + " %")
                     INFO += ("\n----------------------")
                 bot.sendMessage(chat_id, INFO)
                 STRATEGY.append("UPDATE_NOW")
@@ -1800,7 +2057,7 @@ class YourBot(telepot.Bot):
                 bot.sendMessage(chat_id, "Enter Order ID:")
                 CKSTOPBUY.clear()
                 ORDERBUY.clear()
-                # STRATEGY.clear()
+
             elif 'ckstop_buy' in CKSTOPBUY:
                 StopBuy = msg['text']
                 if is_number(StopBuy) == True:
@@ -1815,7 +2072,7 @@ class YourBot(telepot.Bot):
                     self.exchangemenu(chat_id, "BUY")
                     CKSTOPBUY.clear()
                     ORDERBUY.clear()
-                    STRATEGY.clear()
+                    #STRATEGY.clear()
                 else:
                     bot.sendMessage(chat_id, 'Enter number only !! \
                             \nEnter BLS StopRisk(%)', reply_markup=cancelmarkup)
@@ -1841,6 +2098,7 @@ class YourBot(telepot.Bot):
                                 \nEnter CTS Cut loss(%)', reply_markup=cancelmarkup)
 
             elif 'stoploss_buy' in CKLOSS and "bts_update" in STRATEGY: ## Update value
+                COUNT+=1
                 INFO = ""
                 StopLoss = msg['text']
                 # Coin = COINTEMP[0]
@@ -1861,7 +2119,7 @@ class YourBot(telepot.Bot):
                     coin = (order[2])
                     rate = (order[4])
                     qty = (order[3])
-                    INFO += ("\nTrader BTS " + coin)
+                    INFO += ("\n("+str(COUNT)+")Trader BTS " + coin)
                     INFO += ("\n" + Time + "\
                         \nid:/" + str(order_id) + "\
                         \nCoin:" + coin + "\
@@ -1878,7 +2136,6 @@ class YourBot(telepot.Bot):
                 STRATEGY.append("UPDATE_NOW")
                 STRATEGY.append("stoploss_buy")
                 bot.sendMessage(chat_id, "Enter Order ID:")
-
                 CKLOSS.clear()
                 ORDERBUY.clear()
                 # STRATEGY.clear()
@@ -1897,7 +2154,7 @@ class YourBot(telepot.Bot):
                     self.exchangemenu(chat_id, "BUY")
                     CKLOSS.clear()
                     ORDERBUY.clear()
-                    STRATEGY.clear()
+                    #STRATEGY.clear()
                 else:
                     bot.sendMessage(chat_id, 'Enter number only !! \
                             \nEnter BTS Stop loss(%)', reply_markup=cancelmarkup)
@@ -1922,7 +2179,7 @@ class YourBot(telepot.Bot):
                     coin = (order[2])
                     rate = (order[4])
                     qty = (order[3])
-                    INFO += ("\nTrader CTS" + coin)
+                    INFO += ("\n("+str(COUNT)+")Trader CTS" + coin)
                     INFO += ("\n" + Time + "\
                         \nid:/" + str(order_id) + "\
                         \nCoin:" + coin + "\
@@ -1939,120 +2196,14 @@ class YourBot(telepot.Bot):
                 STRATEGY.append("UPDATE_NOW")
                 STRATEGY.append("stoploss_sell")
                 bot.sendMessage(chat_id, "Enter Order ID:")
-                # STRATEGY.clear()
                 CKLOSS.clear()
                 ORDERBUY.clear()
                 # STRATEGY.clear()
             #---------------------------------#
-            ### Recive Order and Update Now !!!!
-            elif "UPDATE_NOW" in STRATEGY:
-                INFO = ""
-                Order = msg['text']
-                Uid = check_sys("data=" + Order + ";echo ${data#*/}")
-                print("Order ID " + Uid)
-                if is_number(Uid) == True:
-                    if "stoploss_sell" in STRATEGY:
-                        INFO = ""
-                        ST1 = Update_StopLoss(Uid, 'bxinth', SellStopLoss)
-                        ST2 = Update_CutLoss(Uid, 'bxinth', SellCutLoss)
-                        if ST1 == "OK" and ST2 == "OK":
-                            bot.sendMessage(chat_id, "Update New value Completed !!", reply_markup=mainmenu)
-                            SS = Get_OrderSale('bxinth', 'sell')
-                            for order in list(SS):
-                                Time = (order[1])
-                                order_id = (order[0])
-                                coin = (order[2])
-                                rate = (order[4])
-                                qty = (order[3])
-                                if order_id != Uid:
-                                    continue
-                                else:
-                                    INFO += ("\nUpdate Trader CTS New!!")
-                                    INFO += ("\n" + Time + "\
-                                        \nOrder:/" + str(order_id) + "\
-                                        \nCoin:" + coin + "\
-                                        \nQty:" + str(qty) + "\
-                                        \nRate:" + str(rate))
-                                    volumn = format_float(qty / rate)
-                                    INFO += ("\nVolumn:" + volumn)
-                                    StopLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Stoploss')
-                                    CutLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Cutloss')
-                                    INFO += ("\nStopLoss:" + str(StopLoss) + " %")
-                                    INFO += ("\nCutLoss:" + str(CutLoss) + " %")
-                                    INFO += ("\n-------------------")
-                                    bot.sendMessage(chat_id, INFO)
-                        else:
-                            bot.sendMessage(chat_id, "Update New value Failed !!", reply_markup=mainmenu)
-                    elif "stoploss_buy" in STRATEGY:
-                        INFO = ""
-                        ST1 = Update_StopLoss(Uid, 'bxinth', BuyStopLoss)
-                        ST2 = Update_CutLoss(Uid, 'bxinth', BuyCutLoss)
-                        if ST1 == "OK" and ST2 == "OK":
-                            bot.sendMessage(chat_id, "Update New value Completed !!", reply_markup=mainmenu)
-                            SS = Get_OrderBuy('bxinth', 'buy')
-                            for order in list(SS):
-                                Time = (order[1])
-                                order_id = (order[0])
-                                coin = (order[2])
-                                rate = (order[4])
-                                qty = (order[3])
-                                if order_id != Uid:
-                                    continue
-                                else:
-                                    print("Order ID Update " + Uid)
-                                    INFO += ("\nUpdate Trader BTS New!!\nCoin:" + coin)
-                                    INFO += ("\n" + Time + "\
-                                            \nid:/" + str(order_id) + "\
-                                            \nCoin:" + coin + "\
-                                            \nQty:" + str(qty) + "\
-                                            \nRate:" + str(rate))
-                                    volumn = format_float(qty / rate)
-                                    INFO += ("\nVolumn:" + volumn)
-                                    StopLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Stoploss')
-                                    CutLoss = Get_BittrexDB(order_id, 'bxinth', 'ckloss', 'Cutloss')
-                                    INFO += ("\nStopLoss:" + str(StopLoss) + " %")
-                                    INFO += ("\nCutLoss:" + str(CutLoss) + " %")
-                                    INFO += ("\n-------------------")
-                                    bot.sendMessage(chat_id, INFO)
-                        elif "ckstop_buy" in STRATEGY:
-                            INFO = ""
-                            ST1 = Update_StopRisk(Uid, 'bxinth', BuyStopRisk)
-                            ST2 = Update_StopBuy(Uid, 'bxinth', BuyStopBuy)
-                            if ST1 == "OK" and ST2 == "OK":
-                                bot.sendMessage(chat_id, "Update (BLS)New value Completed !!", reply_markup=mainmenu)
-                                SS = Get_OrderStopBuy('bxinth', 'buy')
-                                for order in list(SS):
-                                    Time = (order[1])
-                                    order_id = (order[0])
-                                    coin = (order[2])
-                                    rate = (order[4])
-                                    qty = (order[3])
-                                    if order_id != Uid:
-                                        continue
-                                    else:
-                                        print("Order ID Update " + Uid)
-                                        INFO += ("\nUpdate Trader(BLS) New!!\nCoin:" + coin)
-                                        INFO += ("\n" + Time + "\
-                                                    \nid:/" + str(order_id) + "\
-                                                    \nCoin:" + coin + "\
-                                                    \nQty:" + str(qty) + "\
-                                                    \nRate:" + str(rate))
-                                        volumn = format_float(qty / rate)
-                                        INFO += ("\nVolumn:" + volumn)
-                                        BuyStopRisk = Get_BittrexDB(order_id, 'bxinth', 'ckstopbuy', 'StopRisk')
-                                        BuyStopBuy = Get_BittrexDB(order_id, 'bxinth', 'ckstopbuy', 'StopBuy')
-                                        INFO += ("\nStopRisk:" + str(BuyStopRisk) + " %")
-                                        INFO += ("\nStopBuy:" + str(BuyStopBuy) + " %")
-                                        INFO += ("\n-------------------")
-                                        bot.sendMessage(chat_id, INFO)
-                        else:
-                            bot.sendMessage(chat_id, "Update New value Failed !!", reply_markup=mainmenu)
 
-                else:
-                    bot.sendMessage(chat_id, "Error Not found Uid !!")
-                CKLOSS.clear()
-                ORDERBUY.clear()
-                STRATEGY.clear()
+
+                #ORDERBUY.clear()
+                #STRATEGY.clear()
 
             elif 'stoploss_sell' in CKLOSS:
                 StopLoss = msg['text']
@@ -2088,19 +2239,35 @@ class YourBot(telepot.Bot):
 
     def sellorder(self, exchange, order_sell, chat_id):
         order_id = ""
+        CK_BUY=""
+        CK_SELL=""
+
         ST = Get_OrderBuy(exchange, 'buy')
-        if ST == "()":
-            return False
-        for order in list(ST):
-            Time = (order[1])
-            order_id = (order[0])
-            coin = (order[2])
-            rate = (order[4])
-            qty = (order[3])
-            if order_sell == order_id:
-                break
-            else:
-                continue
+        if str(ST) != "()":
+            for order in list(ST):
+                Time = (order[1])
+                order_id = (order[0])
+                coin = (order[2])
+                rate = (order[4])
+                qty = (order[3])
+                if order_sell == order_id:
+                    CK_BUY = True
+                    break
+                else:
+                    continue
+        if CK_BUY != True:
+            ST = Get_OrderSale(exchange, 'sell')
+            if str(ST) != "()":
+                for order in list(ST):
+                    Time = (order[1])
+                    order_id = (order[0])
+                    coin = (order[2])
+                    rate = (order[4])
+                    qty = (order[3])
+                    if order_sell == order_id:
+                        break
+                    else:
+                        continue
         if order_sell == order_id:
             print("Order Sell " + coin)
             print("" + Time + \
@@ -2117,7 +2284,9 @@ class YourBot(telepot.Bot):
                 if simtest == "yes":
                     fee = 0.0025
                     volumn = format_float(float(volumn) - (float(volumn) * fee))
+                    bot.sendMessage(chat_id, "Sell under Processing .. ")
                     ST = sale_coin_sim(coin, float(volumn), float(lastprice))
+                    time.sleep(3)
                     if is_number(ST) == True:
                         profit = (((lastprice / rate) * qty) - qty)
                         profit_fee = (profit - (profit * fee))
@@ -2128,7 +2297,7 @@ class YourBot(telepot.Bot):
                          \nSold:" + str(format_float(((lastprice / rate) * qty))) + "\
                          \nChange Fee " + str(fee) + "\
                          \nProfit " + str(format_float(profit_fee)) + "Bath", reply_markup=mainmenu)
-                        CK = Update_OrderBuy(order_id, exchange, 'sold')
+                        CK = Update_OrderSale(order_id, exchange, 'sold')
                         if CK == "OK":
                             bot.sendMessage(chat_id, 'Update Status Sold Out =>' + CK)
                         else:
@@ -2136,7 +2305,23 @@ class YourBot(telepot.Bot):
                 else:
                     fee = 0.0025
                     volumn = format_float(float(volumn) - (float(volumn) * fee))
+                    bot.sendMessage(chat_id, "Sell under Processing .. ")
                     ST = sale_coin(bxin, coin, float(volumn), float(lastprice))
+                    time.sleep(3)
+                    if ST != "":
+                        CK = Update_OrderSale(order_id, exchange, 'close')
+                        if CK == "OK":
+                            bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                        else:
+                            bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                        bot.sendMessage(chat_id, "Exchange Error =>" + str(ST))
+
+                    if is_number(ST) == True:
+                        INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                        print(INFO)
+                        if INFO != "":  ## Return Error ##
+                            bot.sendMessage(chat_id, INFO)
+                    time.sleep(1)
                     if is_number(ST) == True:
                         profit = (((lastprice / rate) * qty) - qty)
                         profit_fee = (profit - (profit * fee))
@@ -2159,11 +2344,103 @@ class YourBot(telepot.Bot):
             bot.sendMessage(chat_id, "Not Found OrderBuy " + order_id + ",Please verify !!")
             return False
 
+    def buyorder(self, exchange, order_buy, chat_id):
+        order_id = ""
+        CK_BUY = ""
+        ST = Get_OrderStopBuy(exchange, 'buy')
+        if str(ST) != "()":
+            for order in list(ST):
+                Time = (order[1])
+                order_id = (order[0])
+                coin = (order[2])
+                rate = (order[4])
+                qty = (order[3])
+                if order_buy == order_id:
+                    break
+                else:
+                    continue
+
+        if order_buy == order_id:
+            print("Buy Coin Order ! " + coin)
+            print("" + Time + \
+                  "\nOid:" + str(order_id) + \
+                  "\nCoin" + coin + \
+                  "\nQty" + str(qty) + \
+                  "\nRate:" + str(rate))
+            if simtest == "yes":
+                lastprice = get_lastprice_sim(str(coin), exchange)
+            else:
+                lastprice = get_lastprice(bxin, str(coin))
+
+            fee = 0.0025
+            volumn_lt = format_float(qty / lastprice)
+            volumn_coin = format_float(float(volumn_lt) - (float(volumn_lt) * fee))
+
+            if is_number(lastprice) == True and order_id != 0 and order_id != None:
+                if simtest == "yes":
+                    bot.sendMessage(chat_id, "Buy under Processing .. ")
+                    ST = (buy_coin_bss_sim(coin, float(qty), float(lastprice)))
+                    time.sleep(3)
+                    if is_number(ST) == True:
+                        INFO = sync_balance_coin(bxin, exchange, coin, chat_id)
+                        if INFO != "":  ## Return Error ##
+                            bot.sendMessage(chat_id, INFO)
+                    if is_number(ST) == True:
+                        bot.sendMessage(chat_id, "!!Buy Coin Direct Completed !!\
+                         \nCoin:" + coin + "\
+                         \nOrder:" + str(order_id) + "\
+                         \nBuy:"+str(qty) + "\
+                         \nChange Fee " + str(fee) +"\
+                         \nVolumn:"+ str(format_floatc(volumn_coin),4), reply_markup=mainmenu)
+                        ##############
+                        CK = Update_OrderStopBuy(order_id, exchange, 'bought')
+                        if CK == "OK":
+                            bot.sendMessage(chat_id, 'Update Status Bought =>' + CK)
+                        else:
+                            bot.sendMessage(chat_id, 'Update Status Bought =>' + CK)
+                else:
+                    bot.sendMessage(chat_id, "Buy under Processing .. ")
+                    ST = (buy_coin_bss(bxin, coin, float(qty), float(lastprice)))
+                    time.sleep(3)
+                    if is_number(ST) == True:
+                        INFO = sync_balance_coin(bxin, exchange, coin, chat_id)
+                        if INFO != "":  ## Return Error ##
+                            bot.sendMessage(chat_id, INFO)
+                    if ST != "": ### Return Error and close Order ##
+                        CK = Update_OrderSale(order_id, exchange, 'close')
+                        if CK == "OK":
+                            bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                            if INFO != "":  ## Return Error ##
+                                bot.sendMessage(chat_id, INFO)
+                        else:
+                            bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                        ## Error Report ###
+                        bot.sendMessage(chat_id, "Exchange Error =>" + str(ST))
+                    if is_number(ST) == True:
+                        bot.sendMessage(chat_id, "!!Buy Coin Direct Completed !!\
+                             \nCoin:" + coin + "\
+                             \nOrder:" + str(order_id) + "\
+                             \nBuy:" + str(qty) + "\
+                             \nChange Fee " + str(fee) + "\
+                             \nVolumn:" + str(format_floatc(volumn_coin), 4), reply_markup=mainmenu)
+                            ##############
+                        CK = Update_OrderStopBuy(order_id, exchange, 'bought')
+                        if CK == "OK":
+                            bot.sendMessage(chat_id, 'Update Status Bought =>' + CK)
+                        else:
+                            bot.sendMessage(chat_id, 'Update Status Bought =>' + CK)
+                        return True
+        else:
+            bot.sendMessage(chat_id, "Not Found Order " +order_id+ ",Please verify !!")
+            return False
 
     def taskorder(self, exchange, chat_id):
         order_id = ""
         bts = True
-        sts = True
+        cts = True
+        bls = True
+        BL=""
+           
         INFO = ""
         fee = 0.00025
         COUNT = 1
@@ -2201,7 +2478,7 @@ class YourBot(telepot.Bot):
                          "\nMiniProfit:" + str(MinProfit) + \
                          "\nStartRate =>" + str(rate) + \
                          "\nPriceUp =>" + str(lastprice - rate) + "\n(+/-) =>" + str(
-                    format_floatc((100 * (lastprice - rate) / rate), 2)) + \
+                         format_floatc((100 * (lastprice - rate) / rate), 2)) + \
                          "%\n------------------- \
                           \nOrder:/" + str(order_id) + \
                          "\nBuy:" + str(qty) + \
@@ -2269,7 +2546,7 @@ class YourBot(telepot.Bot):
                 bot.sendMessage(chat_id, INFO, reply_markup=mainmenu)
                 INFO = ""
         else:
-            bss = False
+            bls = False
             #bot.sendMessage(chat_id,"No task Order BTS")
 
             #------STS------#
@@ -2323,10 +2600,13 @@ class YourBot(telepot.Bot):
                 bot.sendMessage(chat_id, INFO, reply_markup=mainmenu)
                 INFO = ""
         else:
-            sts = False
+            cts = False
             #bot.sendMessage(chat_id,"No Task Order STS !!")
-        if bts == False and sts == False and bss == False:
+        if bts == False and cts == False and bls == False:
             bot.sendMessage(chat_id, "Not found Task Order running !!")
+            #----# Init balance --- ##
+            if simtest != "yes":
+                sync_balance_all(bxin,'bxinth',str(chat_id))
             ACT = ""
 
 
@@ -2345,6 +2625,7 @@ class YourBot(telepot.Bot):
         COUNT = 1
         ST=""
         result = ""
+        BL=""
         if exchange == 'bxinth':
             fee = 0.0025
         ODL = Get_OrderStopBuy(exchange, 'buy')
@@ -2382,7 +2663,11 @@ class YourBot(telepot.Bot):
                         bot.sendMessage(chat_id, "Update Order:/" + str(order_id) + "\n")
                     elif noti_bss == "OFF" or allow_update_bss == "YES" and ORDER == order_id:
                         #ST = buy_coin_sim(coin, float(volumn), float(lastprice), exchange)
+                        bot.sendMessage(chat_id, "Buy under Processing .. ")
                         ST = (buy_coin_bss_sim(Coin, float(qty), float(lastprice)))
+                        time.sleep(3)
+
+
                 else:
                     fee = 0.0025
                     #volumn = format_float(float(volumn) - (float(volumn) * fee))
@@ -2392,10 +2677,17 @@ class YourBot(telepot.Bot):
                     elif noti_bss == "ON" and allow_update_point_bss == "YES":
                         bot.sendMessage(chat_id, "Update Order:/" + str(order_id) + "\n")
                     elif noti_bss == "OFF" or allow_update_bss == "YES" and ORDER == order_id:
+                        bot.sendMessage(chat_id, "Buy under Processing .. ")
                         ST = (buy_coin_bss(bxin,Coin, float(qty), float(lastprice)))
+                        time.sleep(3)
+                        if is_number(ST) == True:
+                            INFO = sync_balance_coin(bxin, exchange,coin,chat_id)
+                            if INFO != "":  ## Return Error ##
+                                bot.sendMessage(chat_id, INFO)
+
                 ## DEV##
                 print("Buy update at " + str(lastprice) + " !!!")
-                if allow_update_bss == "YES" and ORDER == order_id:
+                if is_number(ST) == True and allow_update_bss == "YES" and ORDER == order_id:
                     noti_bss = "ON"
                     # allow_cutloss = "NO" ## DEv112
                     CK = Update_OrderStopBuy(order_id, exchange, 'bought')
@@ -2418,7 +2710,12 @@ class YourBot(telepot.Bot):
                     ACT=""
                     continue
                 elif ST != "":
-                    bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
+                    CK = Update_OrderStopBuy(order_id, exchange, 'close')
+                    if CK == "OK":
+                        bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                    else:
+                        bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                    bot.sendMessage(chat_id, 'Exchange Error =>'+ST)
                     allow_update_bss = "NO"
                     NOTIBSS_INFO = ""
                     ORDER = ""
@@ -2456,12 +2753,13 @@ class YourBot(telepot.Bot):
                             bot.sendMessage(chat_id, NOTIBSS_INFO, reply_markup=mainmenu)
                             COUNT += 1
                             NOTIBSS_INFO = ""
+                            time.sleep(2)
 
                     ##
 
                     if result[0] == "StopBuy":
                         StopBuy_Price = result[1]
-                        time.sleep(2)
+                        #time.sleep(2)
                         if "UpdateAct" not in UPDATE_ACT and "CloseOrder" not in NOTISTATE_ACTION:
                             NOTIBSS_INFO += ("\n----------------------\
                                  \n(" + str(COUNT) + ")|= StopBuy(BLS) =| \
@@ -2472,13 +2770,22 @@ class YourBot(telepot.Bot):
                             if noti_bss == "ON" and allow_stopbuy_bss != "YES":
                                 NT = "Noti"
                             elif noti_bss == "OFF" or allow_stopbuy_bss == "YES" and order_id == ORDER:
-                                ST = (buy_coin_bss_sim(Coin, float(qty), float(StopBuy_Price)))
+                                bot.sendMessage(chat_id, "Buy under Processing .. ")
+                                ST = (buy_coin_bss_sim(coin, float(qty), float(StopBuy_Price)))
+                                time.sleep(3)
                         else:
                             fee = 0.0025
                             if noti_bss == "ON" and allow_stopbuy_bss != "YES":
                                 NT = "Noti"
                             elif noti_bss == "OFF" or allow_stopbuy_bss == "YES" and order_id == ORDER:
+                                bot.sendMessage(chat_id, "Buy under Processing .. ")
                                 ST = (buy_coin_bss(bxin,coin, float(qty), float(StopBuy_Price)))
+                                time.sleep(3)
+                                if is_number(ST) == True:
+                                    INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                                    if INFO != "":  ## Return Error ##
+                                        bot.sendMessage(chat_id, INFO)
+
                         if NT == "Noti" and allow_stopbuy_bss == "NO" and "UpdateAct" not in UPDATE_ACT and "CloseOrder" not in NOTISTATE_ACTION:
                             NOTISTATE_ACTION.clear()
                             NOTISTATE_ACTION.append('bls_stopbuy')
@@ -2496,9 +2803,9 @@ class YourBot(telepot.Bot):
                             bot.sendMessage(chat_id, NOTIBSS_INFO, reply_markup=mainmenu)
                             COUNT += 1
                             NOTIBSS_INFO = ""
-                            time.sleep(4)
+                            time.sleep(2)
                             print("Buy StopBuy at " + str(StopBuy_Price) + " !!!")
-                        if allow_stopbuy_bss == "YES" and order_id == ORDER:
+                        if is_number(ST) == True and allow_stopbuy_bss == "YES" and order_id == ORDER:
                             noti_bss = "ON"
                             CK = Update_OrderStopBuy(order_id, exchange, 'bought')
                             if CK == "OK":
@@ -2518,11 +2825,17 @@ class YourBot(telepot.Bot):
                             \nVolumn:" + str(volumn_st) + "\
                             \nChange Fee " + str(fee) + "", reply_markup=mainmenu)
                             print("Sale StopBuy at " + str(StopBuy_Price) + " !!!")
+                            ### Update balance after buy ##
+                            #DevBalance
                             ## Auto STS SellCoin By default StopLoss and CutLoss ##
-                            Oid = (sale_coin_res(coin,float(volumn_st),float(lastprice),exchange))  ## Open order sell temporary
+                            BL = Update_Balance_Exc('bxinth', coin, 'THB', float(volumn_st), 'sell',"O", str(chat_id))
+                            if BL[0] != True:
+                                bot.sendMessage(chat_id, BL[1])
+                            else:
+                                Oid = (sale_coin_res(coin,float(volumn_st),float(lastprice),exchange))  ## Open order sell temporary
                             if Oid == None:
                                 Oid = 0
-                            if is_number(Oid) == True:  ## Test
+                            if is_number(Oid) == True and BL[0] == True:  ## Test
                                 NOTIBSS_INFO+=("!! Auto Continue Start(CTS) to Sell \
                                 \nSell:"+coin + "\
                                 \nAmount:"+str(volumn_st)+ " \
@@ -2536,6 +2849,11 @@ class YourBot(telepot.Bot):
                             ORDER = ""
                             ACT = ""
                         elif ST != "":
+                            CK = Update_OrderStopBuy(order_id, exchange, 'close')
+                            if CK == "OK": 
+                               bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                            else:
+                               bot.sendMessage(chat_id, 'Update Status close =>' + CK)
                             bot.sendMessage(chat_id,"Exchange Error =>"+str(ST)) 
                             allow_stopbuy_bss = "NO"
                             NOTIBSS_INFO = ""
@@ -2558,13 +2876,22 @@ class YourBot(telepot.Bot):
                             if noti_bss == "ON" and allow_stoprisk_bss != "YES":
                                 NT = "Noti"
                             elif noti_bss == "OFF" or allow_stoprisk_bss == "YES" and order_id == ORDER:
+                                bot.sendMessage(chat_id, "Buy under Processing .. ")
                                 ST = (buy_coin_bss_sim(coin, float(qty), float(LastPrice)))
+                                time.sleep(3)
 
                         else:
                             if noti_bss == "ON" and allow_stoprisk_bss != "YES":
                                 NT = "Noti"
                             elif noti_bss == "OFF" or allow_stoprisk_bss == "YES" and order_id == ORDER:
+                                bot.sendMessage(chat_id, "Buy under Processing .. ")
                                 ST = (buy_coin_bss(bxin,coin, float(qty), float(LastPrice)))
+                                time.sleep(3)
+                                if is_number(ST) == True:
+                                    INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                                    if INFO != "":  ## Return Error ##
+                                        bot.sendMessage(chat_id, INFO)
+
                         if NT == "Noti" and allow_stoprisk_bss == "NO" and "UpdateAct" not in UPDATE_ACT and "CloseOrder" not in NOTISTATE_ACTION:
                             NOTISTATE_ACTION.clear()
                             NOTISTATE_ACTION.append("bls_stoprisk")
@@ -2577,10 +2904,10 @@ class YourBot(telepot.Bot):
                              \nAccept this Action or not?\n----\n/OK_" + order_id + "\n/UPDATE_" + order_id + "\n/CLOSE_" + order_id)
                             bot.sendMessage(chat_id, NOTIBSS_INFO, reply_markup=mainmenu)
                             NOTIBSS_INFO = ""
-                            time.sleep(4)
+                            time.sleep(2)
                             print("Buy StopRisk at " + str(LastPrice) + " !!!")
                         time.sleep(1)
-                        if allow_stoprisk_bss == "YES" and order_id == ORDER:
+                        if is_number(ST) == True and allow_stoprisk_bss == "YES" and order_id == ORDER:
                             noti_bss = "ON"
                             CK = Update_OrderStopBuy(order_id, exchange, 'bought')
                             if CK == "OK":
@@ -2600,10 +2927,14 @@ class YourBot(telepot.Bot):
                                             \nVolumn:" + str(volumn_st), reply_markup=mainmenu)
                             print("Sale StopRisk at " + str(LastPrice) + " !!!")
                             ## Auto STS SellCoin By default StopLoss and CutLoss ##
-                            Oid = (sale_coin_res(coin, float(volumn_st), float(LastPrice),exchange))  ## Open order sell temporary
+                            BL = Update_Balance_Exc('bxinth', coin, 'THB', float(volumn_st), 'sell',"O", str(chat_id))
+                            if BL[0] != True:
+                                bot.sendMessage(chat_id, BL[1])
+                            else:
+                                Oid = (sale_coin_res(coin, float(volumn_st), float(LastPrice),exchange))  ## Open order sell temporary
                             if Oid == None:
                                 Oid = 0
-                            if is_number(Oid) == True:  ## Test
+                            if is_number(Oid) == True and BL[0] == True:  ## Test
                                 NOTIBSS_INFO += ("!! Auto Continue Start(CTS) to Sell \
                                     \nSell:" + coin + "\
                                     \nAmount:" + str(volumn_st) + " \
@@ -2618,6 +2949,11 @@ class YourBot(telepot.Bot):
                             ORDER = ""
                             ACT = ""
                         elif ST != "":
+                            CK = Update_OrderStopBuy(order_id, exchange, 'bought')
+                            if CK == "OK":
+                                bot.sendMessage(chat_id, 'Close StopRisk =>' + CK)
+                            else:
+                                bot.sendMessage(chat_id, 'Close StopRisk =>' + CK)
                             bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                             allow_stoprisk_bss = "NO"
                             NOTIBSS_INFO = ""
@@ -2644,6 +2980,7 @@ class YourBot(telepot.Bot):
         global NOTIBTS_INFO
         global ORDER
         COUNT = 1
+        BL=""
         ST=""
         result = ""
         #global NOTISTATE_ACTION
@@ -2683,7 +3020,9 @@ class YourBot(telepot.Bot):
                     elif noti_bts == "ON" and allow_update_point_bts == "YES":
                         bot.sendMessage(chat_id, "Update Order:/" + str(order_id) + "\n")
                     elif noti_bts == "OFF" or allow_update_bts == "YES" and ORDER == order_id:
+                        bot.sendMessage(chat_id, "Sell under Processing .. ")
                         ST = sale_coin_sim(coin, float(volumn), float(lastprice))
+                        time.sleep(3)
                 else:
                     fee = 0.0025
                     volumn = format_float(float(volumn) - (float(volumn) * fee))
@@ -2693,10 +3032,17 @@ class YourBot(telepot.Bot):
                     elif noti_bts == "ON" and allow_update_point_bts == "YES":
                         bot.sendMessage(chat_id, "Update Order:/" + str(order_id) + "\n")
                     elif noti_bts == "OFF" or allow_update_bts == "YES" and ORDER == order_id:
+                        bot.sendMessage(chat_id, "Sell under Processing .. ")
                         ST = sale_coin(bxin, coin, float(volumn), float(lastprice))
+                        time.sleep(3)
+                        if is_number(ST) == True:
+                            INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                            if INFO != "":  ## Return Error ##
+                                bot.sendMessage(chat_id, INFO)
+
                 ## DEV##
                 print("Sale update at " + str(lastprice) + " !!!")
-                if allow_update_bts == "YES" and ORDER == order_id:
+                if is_number(ST)== True and allow_update_bts == "YES" and ORDER == order_id:
                     noti_bts = "ON"
                     # allow_cutloss = "NO"
                     CK = Update_OrderBuy(order_id, exchange, 'sold')
@@ -2720,13 +3066,21 @@ class YourBot(telepot.Bot):
                                   format_floatc(((lastprice / rate) * qty), 3), format_floatc(profit_fee, 3))
 
                     #print("Sale Update to Lastprice at " + str(lastprice) + " !!!")
+                    #CK = Update_coinbalance(exchange, coin, chat_id)
+                    #if CK != False:
+                    #    bot.sendMessage(chat_id, CK)
                     ORDER=""
                     allow_update_bts = "NO"
                     NOTIBTS_INFO = ""
                     continue
                 elif ST != "":
-                    bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
-                    continue
+                     CK =Update_OrderBuy(order_id, exchange, 'close')
+                     if CK == "OK":
+                        bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                     else:
+                        bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                     bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
+                     continue
 
                 if allow_update_bts != "YES":
                     result = buy_trailling_stop_shadow(order_id, exchange, lastprice, rate)
@@ -2782,7 +3136,9 @@ class YourBot(telepot.Bot):
                             if noti_bts == "ON" and allow_cutloss_bts != "YES":
                                 NT = "Noti"
                             elif noti_bts == "OFF" or allow_cutloss_bts == "YES" and order_id == ORDER:
+                                bot.sendMessage(chat_id, "Sell under Processing .. ")
                                 ST = sale_coin_sim(coin, float(volumn), float(CutLossPrice))
+                                time.sleep(3)
                         else:
                             fee = 0.0025
                             volumn = format_floatc((float(volumn) - (float(volumn) * fee)),4)
@@ -2791,7 +3147,14 @@ class YourBot(telepot.Bot):
                             if noti_bts == "ON" and allow_cutloss_bts != "YES":
                                 NT = "Noti"
                             elif noti_bts == "OFF" or allow_cutloss_bts == "YES" and order_id == ORDER:
+                                bot.sendMessage(chat_id, "Sell under Processing .. ")
                                 ST = sale_coin(bxin, coin, float(volumn), float(CutLossPrice))
+                                time.sleep(3)
+                                if is_number(ST) == True:
+                                    INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                                    if INFO != "":  ## Return Error ##
+                                        bot.sendMessage(chat_id, INFO)
+
                         if NT == "Noti" and allow_cutloss_bts == "NO" and "UpdateAct" not in UPDATE_ACT and "CloseOrder" not in NOTISTATE_ACTION:
                             NOTISTATE_ACTION.clear()
                             NOTISTATE_ACTION.append('bts_cutloss')
@@ -2811,9 +3174,9 @@ class YourBot(telepot.Bot):
                             bot.sendMessage(chat_id, NOTIBTS_INFO, reply_markup=mainmenu)
                             COUNT += 1
                             NOTIBTS_INFO = ""
-                            time.sleep(4)
+                            time.sleep(2)
                             print("Sale Cut loss at " + str(CutLossPrice) + " !!!")
-                        if allow_cutloss_bts == "YES" and order_id == ORDER:
+                        if is_number(ST) == True and allow_cutloss_bts == "YES" and order_id == ORDER:
                             noti_bts = "ON"
                             #allow_cutloss = "NO"
                             CK = Update_OrderBuy(order_id, exchange, 'sold')
@@ -2838,12 +3201,21 @@ class YourBot(telepot.Bot):
                                             reply_markup=mainmenu)
                             print("Sale Cut loss at " + str(float(CutLossPrice)) + " !!!")
                             Insert_Profit(order_id, time.strftime('%Y-%m-%d %H:%M:%S'), exchange, coin,volumn,qty,format_floatc(((CutLossPrice / rate) * qty),3),format_floatc(profit_fee, 2))
+                            #CK = Update_coinbalance(exchange, coin, chat_id)
+                            #if CK != False:
+                            #    bot.sendMessage(chat_id, CK)
+
                             allow_cutloss_bts = "NO"
                             NOTIBTS_INFO = ""
                             time.sleep(2)
                         elif ST != "":
-                            bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
-                            continue
+                             CK = Update_OrderBuy(order_id, exchange, 'close')
+                             if CK == "OK":
+                                bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                             else:
+                                bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                             bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
+                             continue
                              
 
                     elif result[0] == "StopLoss":
@@ -2863,7 +3235,9 @@ class YourBot(telepot.Bot):
                             if noti_bts == "ON" and allow_stoploss_bts != "YES":
                                 NT = "Noti"
                             elif noti_bts == "OFF" or allow_stoploss_bts == "YES" and order_id == ORDER:
+                                bot.sendMessage(chat_id, "Sell under Processing .. ")
                                 ST = sale_coin_sim(coin, float(volumn), float(LastPrice))
+                                time.sleep(3)
                         else:
                             fee = 0.0025
                             volumn = format_float(float(volumn) - (float(volumn) * fee))
@@ -2873,7 +3247,14 @@ class YourBot(telepot.Bot):
                                 NT = "Noti"
                                 # time.sleep(4)
                             elif noti_bts == "OFF" or allow_stoploss_bts == "YES" and order_id == ORDER:
+                                bot.sendMessage(chat_id, "Sell under Processing .. ")
                                 ST = sale_coin(bxin, coin, float(volumn), float(LastPrice))
+                                time.sleep(3)
+                                if is_number(ST) == True:
+                                    INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                                    if INFO != "":  ## Return Error ##
+                                        bot.sendMessage(chat_id, INFO)
+
                         if NT == "Noti" and allow_stoploss_bts == "NO" and "UpdateAct" not in UPDATE_ACT and "CloseOrder" not in NOTISTATE_ACTION:
                             NOTISTATE_ACTION.clear()
                             NOTISTATE_ACTION.append("bts_stoploss")
@@ -2895,8 +3276,8 @@ class YourBot(telepot.Bot):
                             print("Sale Stop loss at " + str(LastPrice) + " !!!")
                             print("Change fee" + str(fee))
                             print('Profit is ' + str(profit_fee))
-                        time.sleep(1)
-                        if allow_stoploss_bts == "YES" and order_id == ORDER:
+                            time.sleep(2)
+                        if is_number(ST) == True and allow_stoploss_bts == "YES" and order_id == ORDER:
                             noti_bts = "ON"
                             #allow_stoploss = "NO"
                             CK = Update_OrderBuy(order_id, exchange, 'sold')
@@ -2927,16 +3308,19 @@ class YourBot(telepot.Bot):
                             print("Sale Stop loss at " + str(float(LastPrice)) + " !!!")
                             print("Change fee" + str(fee))
                             print('Profit is ' + str(profit_fee))
+                            #CK = Update_coinbalance(exchange, coin, chat_id)
+                            #if CK != False:
+                            #    bot.sendMessage(chat_id, CK)
                             allow_stoploss_bts = "NO"
                             NOTIBTS_INFO = ""
-                            #CK = Update_OrderBuy(order_id, exchange, 'sold')
-                            #if CK == "OK":
-                            #    bot.sendMessage(chat_id, 'Update Status Sold out =>' + CK)
-                            #else:
-                            #    bot.sendMessage(chat_id, 'Update Status Sold out =>' + CK)
                         elif ST != "":
-                            bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
-                            continue
+                             CK = Update_OrderBuy(order_id, exchange, 'close')
+                             if CK == "OK":
+                                bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                             else:
+                                bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                             bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
+                             continue
 
             else:
                 print("Last Price is Null")
@@ -2955,6 +3339,7 @@ class YourBot(telepot.Bot):
         global NOTISTS_INFO
         global ORDER
         COUNT = 1
+        BL=""
         ST=""
         result = ""
         if exchange == 'bxinth':
@@ -2991,7 +3376,9 @@ class YourBot(telepot.Bot):
                     if noti_sts == "ON" and allow_update_sts != "YES":
                         NT = "Noti"
                     elif noti_sts == "OFF" or allow_update_sts == "YES" and ORDER == order_id:
+                        bot.sendMessage(chat_id, "Sell under Processing .. ")
                         ST = sale_coin_sim(coin, float(volumn), float(lastprice))
+                        time.sleep(3)
                 else:
                     fee = 0.0025
                     volumn = format_floatc((float(volumn) - (float(volumn) * fee)),4)
@@ -2999,10 +3386,17 @@ class YourBot(telepot.Bot):
                     if noti_sts == "ON" and allow_update_sts != "YES":
                         NT = "Noti"
                     elif noti_sts == "OFF" or allow_update_sts == "YES" and ORDER == order_id:
+                        bot.sendMessage(chat_id, "Sell under Processing .. ")
                         ST = sale_coin(bxin, coin, float(volumn), float(lastprice))
+                        time.sleep(3)
+                        if is_number(ST) == True:  ## Sync balance
+                            INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                            if INFO != "":  ## Return Error ##
+                                bot.sendMessage(chat_id, INFO)
+
                 ## DEV##
                 print("Sale update at " + str(lastprice) + " !!!")
-                if allow_update_sts == "YES" and ORDER == order_id:
+                if is_number(ST) == True and allow_update_sts == "YES" and ORDER == order_id:
                     noti_sts = "ON"
                     # allow_cutloss = "NO"
                     CK = Update_OrderSale(order_id, exchange, 'sold')
@@ -3023,24 +3417,33 @@ class YourBot(telepot.Bot):
                 if is_number(ST) == True and allow_update_sts == "YES" and  ORDER == order_id:
                     profit = format_floatc((((lastprice / rate) * qty) - qty),4)
                     profit_fee = format_floatc((profit - (profit * fee)),4)
+                    Sold=format_floatc(((lastprice / rate) * qty), 2)
                     bot.sendMessage(chat_id, "!!Action Sell(CTS) Update Completed \
                          \nCoin:" + coin + "\
                          \nOrder:" + str(order_id) + "\
                          \nBuy:" + str(float(qty)) + "\
-                         \nSold:" + str(format_floatc(((lastprice / rate) * qty), 2)) + "\
+                         \nSold:" + str(Sold) + "\
                          \nChange Fee:" + str(fee) + "\
                          \nProfit:" + str(format_floatc(profit_fee, 2)) + "Bath" \
                                     , reply_markup=mainmenu)
                     Insert_Profit(order_id, time.strftime('%Y-%m-%d %H:%M:%S'), exchange, coin, volumn, qty,
                                   format_floatc(((lastprice / rate) * qty), 3), format_floatc(profit_fee, 3))
                     # print("Sale Update to Lastprice at " + str(lastprice) + " !!!")
+                    #CK = Update_coinbalance(exchange, coin, chat_id)
+                    #if CK != False:
+                    #    bot.sendMessage(chat_id, CK)
                     ORDER=""
                     allow_update_sts = "NO"
                     NOTISTS_INFO = ""
                     continue
                 elif ST != "":
-                    bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
-                    continue
+                     CK = Update_OrderSale(order_id, exchange, 'close')
+                     if CK == "OK":
+                        bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                     else:
+                       bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                     bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
+                     continue
 
                 if allow_update_sts != "YES":
                     result = sell_trailling_stop_shadow(order_id, exchange, lastprice, rate)
@@ -3062,7 +3465,9 @@ class YourBot(telepot.Bot):
                             if noti_sts == "ON" and allow_update_sts != "YES":
                                 NT = "Noti"
                             elif noti_sts == "OFF" or allow_update_sts == "YES" and ORDER == order_id:
+                                bot.sendMessage(chat_id, "Sell under Processing .. ")
                                 ST = sale_coin_sim(coin, float(volumn), float(lastprice))
+                                time.sleep(3)
                         else:
                             fee = 0.0025
                             volumn = format_floatc((float(volumn) - (float(volumn) * fee)),4)
@@ -3070,7 +3475,14 @@ class YourBot(telepot.Bot):
                             if noti_sts == "ON" and allow_update_sts != "YES":
                                 NT = "Noti"
                             elif noti_sts == "OFF" or allow_update_sts == "YES" and ORDER == order_id:
+                                bot.sendMessage(chat_id, "Sell under Processing .. ")
                                 ST = sale_coin(bxin, coin, float(volumn), float(lastprice))
+                                time.sleep(3)
+                                if is_number(ST) == True:
+                                    INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                                    if INFO != "":  ## Return Error ##
+                                        bot.sendMessage(chat_id, INFO)
+
                         ## DEV##
                         if NT == "Noti" and allow_update_sts == "NO":
                             NOTISTATE_ACTION.clear()
@@ -3097,7 +3509,7 @@ class YourBot(telepot.Bot):
                             NOTISTS_INFO = ""
                             time.sleep(2)
                         print("Action Close Status" + allow_close_sts)
-                        if allow_update_sts == "YES" and ORDER == order_id:
+                        if is_number(ST) == True and allow_update_sts == "YES" and ORDER == order_id:
                             noti_sts = "ON"
                             # allow_stoploss = "NO"
                             CK = Update_OrderSale(order_id, exchange, 'sold')
@@ -3128,10 +3540,18 @@ class YourBot(telepot.Bot):
                             print("Sale Update at " + str(lastprice) + " !!!")
                             print("Change fee:" + str(fee))
                             print('Profit:' + str(profit_fee))
+                            #CK = Update_coinbalance(exchange, coin, chat_id)
+                            #if CK != False:
+                            #    bot.sendMessage(chat_id, CK)
                             ORDER ==""
                             allow_update_sts = "NO"
                             NOTISTS_INFO = ""
                         elif ST != "":
+                            CK = Update_OrderSale(order_id, exchange, 'close')
+                            if CK == "OK":
+                               bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                            else:
+                               bot.sendMessage(chat_id, 'Update Status close =>' + CK)
                             bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                             continue
 
@@ -3155,7 +3575,9 @@ class YourBot(telepot.Bot):
                                 NT = "Noti"
 
                             elif noti_sts == "OFF" or allow_cutloss_sts == "YES" and order_id == ORDER:
+                                bot.sendMessage(chat_id, "Sell under Processing .. ")
                                 ST = sale_coin_sim(coin, float(volumn), float(CutLossPrice))
+                                time.sleep(3)
                         else:
                             fee = 0.0025
                             volumn = format_floatc((float(volumn) - (float(volumn) * fee)),4)
@@ -3165,7 +3587,14 @@ class YourBot(telepot.Bot):
                                 NT = "Noti"
 
                             elif noti_sts == "OFF" or allow_cutloss_sts == "YES" and order_id == ORDER:
+                                bot.sendMessage(chat_id, "Sell under Processing .. ")
                                 ST = sale_coin(bxin, coin, float(volumn), float(CutLossPrice))
+                                time.sleep(3)
+                                if is_number(ST) == True:
+                                    INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                                    if INFO != "":  ## Return Error ##
+                                        bot.sendMessage(chat_id, INFO)
+
                         if NT == "Noti" and allow_cutloss_sts == "NO" and "UpdateAct" not in UPDATE_ACT and "CloseOrder" not in NOTISTATE_ACTION:
                             NOTISTATE_ACTION.clear()
                             NOTISTATE_ACTION.append('cts_cutloss')
@@ -3189,7 +3618,7 @@ class YourBot(telepot.Bot):
                             print("Sale Cut loss at " + str(CutLossPrice) + " !!!")
                             time.sleep(2)
 
-                        if allow_cutloss_sts == "YES" and order_id == ORDER:
+                        if is_number(ST) == True and allow_cutloss_sts == "YES" and order_id == ORDER:
                             noti_sts = "ON"
                             #allow_cutloss = "NO"
                             CK = Update_OrderSale(order_id, exchange, 'sold')
@@ -3217,16 +3646,20 @@ class YourBot(telepot.Bot):
                             Insert_Profit(order_id, time.strftime('%Y-%m-%d %H:%M:%S'), exchange, coin, volumn, qty,
                                           format_floatc(((CutLossPrice / rate) * qty), 3), format_floatc(profit_fee, 2))
                             print("Sale Cut loss at " + str(CutLossPrice) + " !!!")
+                            #CK=Update_coinbalance(exchange,coin,chat_id)
+                            #if CK != False:
+                            #    bot.sendMessage(chat_id,CK)
                             allow_cutloss_sts = "NO"
                             NOTIISTS_INFO = ""
-                            # CK = Update_OrderSale(order_id, exchange, 'sold')
-                            #if CK == "OK":
-                            #     bot.sendMessage(chat_id, 'Update Status =>' + CK)
-                            # else:
-                            #     bot.sendMessage(chat_id, 'Update Status =>' + CK)
+
                         elif ST != "":
-                            bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
-                            continue
+                             CK = Update_OrderSale(order_id, exchange, 'close')
+                             if CK == "OK":
+                                bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                             else:
+                                bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                             bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
+                             continue
 
                     elif result[0] == "StopLoss":
                         LastPrice = result[1]
@@ -3245,19 +3678,28 @@ class YourBot(telepot.Bot):
                                 NT = "Noti"
 
                             elif noti_sts == "OFF" or allow_stoploss_sts == "YES" and order_id == ORDER:
+                                bot.sendMessage(chat_id, "Sell under Processing .. ")
                                 ST = sale_coin_sim(coin, float(volumn), float(LastPrice))
+                                time.sleep(3)
                         else:
                             fee = 0.0025
                             volumn = format_floatc((float(volumn) - (float(volumn) * fee)),4)
                             print("Real Volume Sell" + str(float(volumn) - (float(volumn) * fee)))
                             print("Sale Coin Stop Loss !! at " + str(LastPrice) + " " + coin)
-                            time.sleep(4)
+                            #time.sleep(4)
                             if noti_sts == "ON" and allow_stoploss_sts != "YES":
                                 NT = "Noti"
-                                time.sleep(4)
+                                time.sleep(2)
                             elif noti_sts == "OFF" or allow_stoploss_sts == "YES" and order_id == ORDER:
                                 # bot.sendMessage(chat_id,"")
+                                bot.sendMessage(chat_id, "Sell under Processing .. ")
                                 ST = sale_coin(bxin, coin, float(volumn), float(LastPrice))
+                                time.sleep(3)
+                                if is_number(ST) == True:
+                                    INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                                    if INFO != "":  ## Return Error ##
+                                        bot.sendMessage(chat_id, INFO)
+
                             # ST=False
                             print("Status Sale Order " + str(ST))
                         if NT == "Noti" and allow_stoploss_sts == "NO" and "UpdateAct" not in UPDATE_ACT and "CloseOrder" not in NOTISTATE_ACTION:
@@ -3285,7 +3727,7 @@ class YourBot(telepot.Bot):
                             print("Change fee:" + str(fee))
                             print('Profit:' + str(profit_fee))
                             time.sleep(2)
-                        if allow_stoploss_sts == "YES" and order_id == ORDER:
+                        if is_number(ST) == True and allow_stoploss_sts == "YES" and order_id == ORDER:
                             noti_sts = "ON"
                             #allow_stoploss = "NO"
                             CK = Update_OrderSale(order_id, exchange, 'sold')
@@ -3297,7 +3739,7 @@ class YourBot(telepot.Bot):
                         if is_number(ST) == True and allow_stoploss_sts == "YES" and order_id == ORDER:
                             profit = (((LastPrice / rate) * qty) - qty)
                             fee = 0.0025
-                            profit_fee = format_floatc((profit - (profit * fee)),4)
+                            profit_fee =(profit - (profit * fee))
                             bot.sendMessage(chat_id,
                                             "!! Action StopLoss(CTS) Completed \
                                             \nCoin:" + coin + \
@@ -3314,9 +3756,17 @@ class YourBot(telepot.Bot):
                             print("Sale Stop loss at " + str(LastPrice) + " !!!")
                             print("Change fee:" + str(fee))
                             print('Profit:' + str(profit_fee))
+                            #CK = Update_coinbalance(exchange, coin, chat_id)
+                            #if CK != False:
+                            #    bot.sendMessage(chat_id, CK)
                             allow_stoploss_sts = "NO"
                             NOTISTS_INFO = ""
                         elif ST != "":
+                            CK = Update_OrderSale(order_id, exchange, 'close')
+                            if CK == "OK":
+                               bot.sendMessage(chat_id, 'Update Status close =>' + CK)
+                            else:
+                               bot.sendMessage(chat_id, 'Update Status close =>' + CK)
                             bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                             continue
                             #CK = Update_OrderSale(order_id, exchange, 'sold')
@@ -3344,11 +3794,18 @@ class YourBot(telepot.Bot):
             print("Sell Lastprice:" + str(lastprice) + "\nvl:" + str(vl) + "\nSell:" + str(sell) + "\nProfit " + str(
                 sell * lastprice))
             if simtest == "yes":
-                time.sleep(4)
+                bot.sendMessage(chat_id, "Sell under Processing .. ")
                 ST = sale_coin_sim(coin, float(vl), float(lastprice))
+                time.sleep(3)
             else:
-                time.sleep(4)
+                bot.sendMessage(chat_id, "Sell under Processing .. ")
                 ST = sale_coin(bxin, coin, float(vl), float(lastprice))
+                time.sleep(3)
+                if is_number(ST) == True:
+                    INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                    if INFO != "":  ## Return Error ##
+                        bot.sendMessage(chat_id, INFO)
+
             if is_number(ST) == True:
                 count += 1
                 profit = (sell * lastprice)
@@ -3385,11 +3842,18 @@ class YourBot(telepot.Bot):
                 "Sell Lastprice:" + str(lastprice) + "\nvl:" + str(vl) + "\nSell:" + str(lastprice) + "\nProfit " + str(
                     Vlcoin * lastprice))
             if simtest == "yes":
-                time.sleep(4)
+                bot.sendMessage(chat_id, "Sell under Processing .. ")
                 ST = sale_coin_sim(coin, float(vl), float(lastprice))
+                time.sleep(3)
             else:
-                time.sleep(4)
+                bot.sendMessage(chat_id, "Sell under Processing .. ")
                 ST = sale_coin(bxin, coin, float(vl), float(lastprice))
+                time.sleep(3)
+                if is_number(ST) == True:
+                    INFO = sync_balance_coin(bxin, exchange,coin, chat_id)
+                    if INFO != "":  ## Return Error ##
+                        bot.sendMessage(chat_id, INFO)
+
             if is_number(ST) == True:
                 count += 1
                 profit = (Vlcoin * lastprice)
@@ -3411,8 +3875,8 @@ class YourBot(telepot.Bot):
             ProfitCount += sum
         bot.sendMessage(chat_id, "!! Profit Sum is:" + str(ProfitCount) + " Bath")
 
-
     def check_close_order(self, exchange, chat_id):
+        print("2.Check Strategy income" + str(STRATEGY))
         ST = Get_OpenOrder(exchange, 'open')
         if str(ST) == "()":
             return False
@@ -3439,28 +3903,34 @@ class YourBot(telepot.Bot):
                 else:
                     ST = ck_close_order(bxin, order_id, coin, 'sell', exchange)
 
-            if ST == True and Type == "buy" and "CutlossShadows" not in STRATEGY:  ## Dev112
-                #CKCLOSE.append('ckclose_buy_apply')
-                print("DEBUG Insert Ckloss StopLoss " + str(BuyStopLoss) + " CutLoss " + str(BuyCutLoss))
-                # bot.sendMessage(chat_id,"Apply BST Strategy or not?\n /Apply\n/No")
+            if ST == True and Type == "buy" and "bls" not in STRATEGY:  ## Dev112
                 ST = Insert_ckloss(order_id, 'bxinth', BuyStopLoss, BuyCutLoss, 0)
                 if ST == "OK":
                     ST = Insert_OrderBuy(order_id, exchange, time.strftime('%Y-%m-%d %H:%M:%S'), coin, qty, rate, 'buy')
                     print("DEBUG Status Insert OrderBuy " + ST)
                     if ST == "OK":
+                        NT == "Noti"
                         bot.sendMessage(chat_id, "Order buy have been closed !!")
                         bot.sendMessage(chat_id,
-                                        "Auto Apply BST \
+                                        "Auto Apply BTS \
                                         \nOrder ID:/" + str(order_id) + "\
                                         \nCutLoss:" + str(BuyCutLoss) + " % \
                                         \nStopLoss:" + str(BuyStopLoss) + "% \
                                         \nApply --> Completed ", reply_markup=mainmenu)
+                        ## Sync Balance with Exchange ##
+                        STRATEGY.clear()
+                        INFO=sync_balance_coin(bxin,exchange,coin,chat_id)
+                        if INFO != "": ## Return Error ##
+                            bot.sendMessage(chat_id,INFO)
 
                     else:
                         bot.sendMessage(chat_id,
                                         "!! Apply Strategy Trailing Stop to Order Buy " + order_id + "--> Failed !! ")
+                        STRATEGY.clear()
+                else:
+                    STRATEGY.clear()
 
-            if ST == True and Type == "buy" and "CutlossShadows" in STRATEGY:  ## Dev112
+            elif ST == True and Type == "buy" and "bls" in STRATEGY:  ## Dev112
                 # CKCLOSE.append('ckclose_buy_apply')
                 print("DEBUG Insert StopRisk =>" + str(BuyStopRisk) + "StopBuy =>" + str(BuyStopBuy))
                 # bot.sendMessage(chat_id,"Apply BST Strategy or not?\n /Apply\n/No")
@@ -3470,6 +3940,7 @@ class YourBot(telepot.Bot):
                                              'buy')
                     print("DEBUG Status Insert OrderStopBuy " + ST)
                     if ST == "OK":
+                        NT == "Noti"
                         bot.sendMessage(chat_id, "Order buy have been closed !!")
                         bot.sendMessage(chat_id,
                                         "Auto Apply BLS !! \
@@ -3478,12 +3949,15 @@ class YourBot(telepot.Bot):
                                         \nStopRisk:" + str(BuyStopRisk) + "% \
                                         \nApply --> Completed ", reply_markup=mainmenu)
                         STRATEGY.clear()
+
                     else:
                         bot.sendMessage(chat_id,
                                         "!! Apply Strategy BLS  to Order Buy " + order_id + "--> Failed !! ")
                         STRATEGY.clear()
+                else:
+                    STRATEGY.clear()
 
-            if ST == True and Type == "sell":
+            elif ST == True and Type == "sell":
                 print("DEBUG Insert Ckloss StopLoss " + str(SellStopLoss) + " CutLoss " + str(SellCutLoss))
                 ST = Insert_ckloss(order_id, exchange, SellStopLoss, SellCutLoss, 0)
                 if ST == "OK":
@@ -3491,6 +3965,7 @@ class YourBot(telepot.Bot):
                                           'sell')
                     print("DEBUG Status Insert OrderSell " + ST)
                     if ST == "OK":
+                        NT == "Noti"
                         bot.sendMessage(chat_id, "Order Sell have been closed !!")
                         bot.sendMessage(chat_id,
                                         "Auto Apply CTS \
@@ -3498,9 +3973,17 @@ class YourBot(telepot.Bot):
                                              \nCutLoss:" + str(SellCutLoss) + " % \
                                              \nStopLoss:" + str(SellStopLoss) + "% \
                                              \nApply --> Completed ", reply_markup=mainmenu)
+
+                        STRATEGY.clear()
                     else:
                         bot.sendMessage(chat_id,
                                         "!! Apply Strategy Trailing Stop to Order Sell " + order_id + "--> Failed !! ")
+
+                        STRATEGY.clear()
+
+                else:
+                    STRATEGY.clear()
+
 
 
 TOKEN = telegrambot
@@ -3511,17 +3994,17 @@ bot.message_loop()
 #############MAIN PROGRAM ###########
 while True:
     if STRATEGY_CHECK == "ON":
-        #simtest = "yes"
+        simtest = "yes"
         for adminid in adminchatid:
             print("ChatID:"+str(adminid))
+            bot.bls('bxinth', adminid)
+            ####################
             bot.bts('bxinth', adminid)
             ####################
             bot.cts('bxinth', adminid)
             ####################
-            bot.bls('bxinth', adminid)
-            ####################
             bot.check_close_order('bxinth', adminid)
-    time.sleep(15)
+    time.sleep(10)
 #    print("Admin ChatID "+str(adminid))
 #    ST = bot.bts('bxinth', adminid)
 #    if ST == False:

@@ -396,7 +396,7 @@ def Get_BittrexOpen_Order(Exchange,Type,Symbol):
         con.close()
         return results
     except:
-        return "failed"
+        return "Failed"
 
 
 def Get_BittrexDB(UUID, Exchange, table, col):
