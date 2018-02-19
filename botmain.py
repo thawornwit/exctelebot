@@ -789,39 +789,41 @@ def cancel_coin(id, order_id, symbol, exchange):
 
 def get_coin_information(id, symbol):
     try:
-        INFO = "|== Coin Information ==| \n"
+        INFO = "|= COIN INFORMATION =| \n"
         info = (id.fetch_ticker(symbol))
         INFO += str("Coin:" + symbol + "\n")
         INFO += str("Change:" + str(info['info']['change']) + "\n")
-        INFO += str("LastPrice:" + str(info['info']['last_price']) + "\n")
-        for infom in (info['info']):
-            if infom == "orderbook":
-                for order in info['info'][infom]:
-                    if order == "asks":
-                        INFO += "|- Asks -| \n"
-                        for data in (info['info']['orderbook']['asks']):
-                            INFO += str(data + ":" + str(info['info']['orderbook']['asks'][data]) + "\n")
-                    if order == "bids":
-                        INFO += "|- Bids -| \n"
-                        for data in (info['info']['orderbook']['bids']):
-                            INFO += str(data + ":" + str(info['info']['orderbook']['bids'][data]) + "\n")
-                continue
+        INFO += str("LastPrice:" + str(format_floatc((info['info']['last_price']),4)) + "\n")
+        INFO += "|-----------------------| \n"
+        #for infom in (info['info']):
+           # if infom == "orderbook":
+                #for order in info['info'][infom]:
+                #    if order == "asks":
+                #        INFO += "|- Asks -| \n"
+                #        for data in (info['info']['orderbook']['asks']):
+                #            INFO += str(data + ":" + str(info['info']['orderbook']['asks'][data]) + "\n")
+                #    if order == "bids":
+                 #       INFO += "|- Bids -| \n"
+                 #       for data in (info['info']['orderbook']['bids']):
+                 #           INFO += str(data + ":" + str(info['info']['orderbook']['bids'][data]) + "\n")
+              #  continue
         ST = id.fetch_order_book(symbol)
         count = 0
-        INFO += ("|-- Last Order --|\n")
-        INFO+=("|- Bids -| \n")
+        INFO += ("|= LAST BX ORDER =|\n")
+        INFO+=("[ BIDS ]\n")
         for data in ST['bids']:
-            INFO += (str(format_float(data[0])) + "|" + str(data[1]) + "\n")
+            INFO +=(" "+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
             count += 1
             if count == 5:
                 break
         count = 0
-        INFO += ("|- Asks -|\n")
+        INFO += ("[ ASKS ]\n")
         for data in ST['asks']:
-            INFO += (str(format_float(data[0])) + "|" + str(data[1]) + "\n")
+            INFO += (" "+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
             count += 1
             if count == 5:
                 break
+        INFO +="|-----------------------| \n"
 
         #print(INFO)
         return INFO
@@ -1090,9 +1092,10 @@ def main():
                 \n  Free:"+free+"\
                 \n|===============|")
 
-    INFO=Update_Balance_Exc('bxinth','THB','THB',5,'buy',"C",str(ChatID))
-    if INFO[0] == True:
-        print(INFO[1])
+    #INFO=Update_Balance_Exc('bxinth','THB','THB',5,'buy',"C",str(ChatID))
+    #if INFO[0] == True:
+    print(get_coin_information(bxin,'LTC/THB'))
+     #   print(INFO[1])
     #print(sync_balance_coin(bxin,'bxinth','LTC',str(ChatID)))
     #print(CK)
     #BXCOIN=['BCH/THB','BTC/THB','LTC/THB']
