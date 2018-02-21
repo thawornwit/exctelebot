@@ -3,6 +3,7 @@ from bittrex_tokens import *  ## for accessing telegram api
 import matplotlib  ## for ploting graph
 import os
 import sys
+
 import time
 from pprint import pprint
 
@@ -1037,7 +1038,7 @@ def sync_balance_all(id,Exchange,ChatID):
                         \nFree:" + str(Free))
                         continue
                     else:
-                        return("Sync Update database --> Failed")
+                        return "Sync Update database --> Failed"
             else:
                 CK=Update_CoinBlance(Exchange,coin,Total,Used,Free,ChatID)
                 if str(CK) == "OK":
@@ -1047,10 +1048,9 @@ def sync_balance_all(id,Exchange,ChatID):
                 \nTotal:"+str(Total)+"\
                 \nUsed:"+str(Used)+"\
                 \nFree:"+str(Free))
-                    continue
+                    continue	
                 else:
-
-                    return("Sync Update database --> Failed")
+                    return "Sync Update database --> Failed"
 
     except ccxt.DDoSProtection as e:
         print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
@@ -1092,9 +1092,11 @@ def main():
                 \n  Free:"+free+"\
                 \n|===============|")
 
+        print(sync_balance_all(bxin,'bxinth',str(ChatID)))
+
     #INFO=Update_Balance_Exc('bxinth','THB','THB',5,'buy',"C",str(ChatID))
     #if INFO[0] == True:
-    print(get_coin_information(bxin,'LTC/THB'))
+    #print(get_coin_information(bxin,'LTC/THB'))
      #   print(INFO[1])
     #print(sync_balance_coin(bxin,'bxinth','LTC',str(ChatID)))
     #print(CK)
