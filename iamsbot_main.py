@@ -489,6 +489,9 @@ class YourBot(telepot.Bot):
             if msg['text'] == "TASK ORDER" or msg['text'] == "/taskorder":
                 bot.sendMessage(chat_id, "|== STRATEGY TASK ==|")
                 self.taskorder('bxinth', chat_id)
+            if msg['text'] == "ORDER WAIT" or msg['text'] == "/orderwait":
+                #bot.sendMessage(chat_id, "|= WAIT T =|")
+                self.check_trading_wait('bxinth',chat_id)
             if msg['text'] == "/balance" or msg['text'] == "BALANCE":
                 self.coinbx(chat_id)
                 CKBALANCE.clear()
@@ -1419,7 +1422,7 @@ class YourBot(telepot.Bot):
 
                     if BL[0] == True and is_number(Oid) == True:
                         bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Open Order " + str(Oid) + "  --> Successfully")
-                        INFO = check_coin_list(bxin, Coin, str(Rate),str(format_floatc((float(Buy) / float(Rate)),4)), 'bids')
+                        INFO = check_coin_list(bxin, Coin, str(Rate),str(format_floatc((float(Buy) / float(Rate)),4)), 'buy')
                         if INFO != None:
                             if INFO[0] == True:
                                 bot.sendMessage(chat_id, "\nBIDS LAST ORDER \
@@ -2311,7 +2314,7 @@ class YourBot(telepot.Bot):
                             bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Out => Completed")
                         else:
                             bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Out => Completed")
-                        INFO = check_coin_list(bxin, coin, str(lastprice),str(volumn),'asks')
+                        INFO = check_coin_list(bxin, coin, str(lastprice),str(volumn),'sell')
                         if INFO != None:
                             if INFO[0] == True:
                                 bot.sendMessage(chat_id, "\nASKS LAST ORDER \
@@ -2361,7 +2364,7 @@ class YourBot(telepot.Bot):
                         else:
                             bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Out => Completed")
 
-                        INFO = check_coin_list(bxin, coin, str(lastprice), str(volumn), 'asks')
+                        INFO = check_coin_list(bxin, coin, str(lastprice), str(volumn), 'sell')
                         if INFO != None:
                             if INFO[0] == True:
                                 bot.sendMessage(chat_id, "\nASKS LAST ORDER \
@@ -2437,7 +2440,7 @@ class YourBot(telepot.Bot):
                         else:
                             bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Bought => Completed")
 
-                        INFO = check_coin_list(bxin, coin, str(lastprice), str(format_floatc(volumn_coin), 4), 'bids')
+                        INFO = check_coin_list(bxin, coin, str(lastprice), str(format_floatc(volumn_coin), 4), 'buy')
                         if INFO != None:
                             if INFO[0] == True:
                                 bot.sendMessage(chat_id, "\nBIDS LAST ORDER \
@@ -2484,7 +2487,7 @@ class YourBot(telepot.Bot):
                         else:
                             bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Bought => Completed")
 
-                        INFO = check_coin_list(bxin, coin, str(lastprice),str(format_floatc(volumn_coin), 4), 'bids')
+                        INFO = check_coin_list(bxin, coin, str(lastprice),str(format_floatc(volumn_coin), 4), 'buy')
                         if INFO != None:
                             if INFO[0] == True:
                                 bot.sendMessage(chat_id, "\nBIDS LAST ORDER \
@@ -2889,7 +2892,7 @@ class YourBot(telepot.Bot):
                 qty = (order[3])
                 #--------#
                 volumn_st = format_floatc((float(qty) /float(rate)), 4)
-                CHECK=check_coin_list(bxin,coin,str(format_floatc(rate,4)),str(volumn_st),'asks')
+                CHECK=check_coin_list(bxin,coin,str(format_floatc(rate,4)),str(format_floatc(volumn_st,4)),'sell')
                 if CHECK != None:
                     if CHECK[0] == True:
                         INFO+=(INFO+"|"+coin+"|asks")
@@ -2908,7 +2911,7 @@ class YourBot(telepot.Bot):
                 qty = (order[3])
                 # --------#
                 volumn_st = format_floatc((float(qty) / float(rate)), 4)
-                CHECK = check_coin_list(bxin, coin, str(format_floatc(rate, 4)), str(volumn_st), 'bids')
+                CHECK = check_coin_list(bxin, coin, str(format_floatc(rate, 4)), str(format_floatc(volumn_st,4)), 'buy')
                 if CHECK != None:
                     if CHECK[0] == True:
                         INFO += (INFO + "|" + coin + "|bids")
@@ -2931,7 +2934,7 @@ class YourBot(telepot.Bot):
                 qty = (order[3])
 
                 volumn_st = format_floatc((float(qty) / float(rate)), 4)
-                CHECK = check_coin_list(bxin, coin, str(format_floatc(rate, 4)), str(volumn_st), 'bids')
+                CHECK = check_coin_list(bxin, coin, str(format_floatc(rate, 4)), str(format_floatc(volumn_st,4)), 'buy')
                 if CHECK != None:
                     if CHECK[0] == True:
                         INFO += (INFO + "|" + coin + "|asks")
@@ -3412,7 +3415,7 @@ class YourBot(telepot.Bot):
                          \nChange Fee " + str(fee) + "\
                          \nProfit " + str(format_floatc(profit_fee, 2)) + "Bath" \
                                     , reply_markup=mainmenu)
-                    INFO=check_coin_list(bxin,coin,str(lastprice),str(volumn),'asks')
+                    INFO=check_coin_list(bxin,coin,str(lastprice),str(volumn),'sell')
                     if INFO != None:
                         if INFO[0] == True:
                             bot.sendMessage(chat_id,"\nASKS LAST ORDER \
@@ -3575,7 +3578,7 @@ class YourBot(telepot.Bot):
                                             reply_markup=mainmenu)
 
                             print("Sale Cut loss at " + str(float(CutLossPrice)) + " !!!")
-                            INFO = check_coin_list(bxin, coin, str(CutLossPrice), str(volumn), 'asks')
+                            INFO = check_coin_list(bxin, coin, str(CutLossPrice), str(format_floatc(volumn,4)), 'sell')
                             if INFO != None:
                                 if INFO[0] == True:
                                     bot.sendMessage(chat_id, "\nLAST ORDER \
@@ -3699,7 +3702,7 @@ class YourBot(telepot.Bot):
                                             \nChange Fee:" + str(fee) + "\
                                             \nProfit:" + str(format_floatc(profit_fee, 2)) + " Bath",
                                             reply_markup=mainmenu)
-                            INFO = check_coin_list(bxin, coin, str(LastPrice), str(volumn), 'asks')
+                            INFO = check_coin_list(bxin, coin, str(format_floatc(LastPrice,4)), str(format_floatc(volumn,4)), 'sell')
                             if INFO != None:
                                 if INFO[0] == True:
                                     bot.sendMessage(chat_id, "\nASKS LAST ORDER \
@@ -3842,7 +3845,7 @@ class YourBot(telepot.Bot):
                          \nProfit:" + str(format_floatc(profit_fee, 4)) + "Bath" \
                                     , reply_markup=mainmenu)
 
-                    INFO = check_coin_list(bxin, coin, str(lastprice), str(volumn), 'asks')
+                    INFO = check_coin_list(bxin, coin, str(lastprice), str(volumn), 'sell')
                     if INFO != None:
                         if INFO[0] == True:
                             bot.sendMessage(chat_id, "\nASKS LAST ORDER \
@@ -3971,7 +3974,7 @@ class YourBot(telepot.Bot):
                                             "\nProfit:" + str(format_floatc(profit_fee, 2)) + " Bath",
                                             reply_markup=mainmenu)
 
-                            INFO = check_coin_list(bxin, coin, str(lastprice), str(volumn), 'asks')
+                            INFO = check_coin_list(bxin, coin, str(lastprice), str(volumn), 'sell')
                             if INFO != None:
                                 if INFO[0] == True:
                                     bot.sendMessage(chat_id, "\nLAST ORDER \
@@ -4099,7 +4102,7 @@ class YourBot(telepot.Bot):
                                             "\nProfit:" + str(format_floatc(profit_fee, 2)) + " Bath",
                                             reply_markup=mainmenu)
 
-                            INFO = check_coin_list(bxin, coin, str(CutLossPrice), str(volumn), 'asks')
+                            INFO = check_coin_list(bxin, coin, str(CutLossPrice), str(volumn), 'sell')
                             if INFO != None:
                                 if INFO[0] == True:
                                     bot.sendMessage(chat_id, "\nASKS LAST ORDER \
@@ -4227,7 +4230,7 @@ class YourBot(telepot.Bot):
                                             "\nProfit:" + str(format_floatc(profit_fee, 2)) + " Bath",
                                             reply_markup=mainmenu)
 
-                            INFO = check_coin_list(bxin, coin, str(LastPrice), str(volumn), 'asks')
+                            INFO = check_coin_list(bxin, coin, str(LastPrice), str(volumn), 'sell')
                             if INFO != None:
                                 if INFO[0] == True:
                                     bot.sendMessage(chat_id, "\nLAST ORDER \
@@ -4507,12 +4510,12 @@ class YourBot(telepot.Bot):
                 else:
                     STRATEGY.clear()
 
-    def ck_open_trader(self, exchange, chat_id):
+    def check_close_openorder_trading(self,exchange, chat_id):
         #print("2.Check Strategy income" + str(STRATEGY))
         ST = Get_OpenOrder(exchange, 'trading')
         if str(ST) == "()":
             return False
-        print("|= Remaining Open Order trading wait  =|")
+        print("|= Remaining Open Order trading  =|")
         for order in list(ST):
             Time = (order[2])
             order_id = (order[1])
@@ -4520,24 +4523,20 @@ class YourBot(telepot.Bot):
             Type = (order[4])
             rate = (order[5])
             volumn = (order[6])
+            exchange=(order[9])
+            strategy=(order[10])
             qty = (order[7])
             print("" + Time + "\nO:/" + order_id + "\nC:" + coin + "\nR:" + str(rate) + "\nQ:" + str(
                 qty) + "\nVolumn:" + str(volumn) + "\nType " + Type)
             print("---------------------")
-
             if Type == "buy":
                 if simtest != "yes":
-                    INFO = check_coin_list(bxin, coin, str(rate), str(volumn), 'bids')
-                    if INFO[0] == True:
-                        bot.sendMessage(chat_id,"|= Open Order Trading =|\n"+INFO[1])
+                    ST = ck_close_order(bxin, order_id, coin, 'buy', exchange)
             elif Type == "sell":
                 if simtest != "yes":
-                    INFO = check_coin_list(bxin, coin, str(rate), str(volumn), 'asks')
-                    if INFO[0] == True:
-                        bot.sendMessage(chat_id, "|= Open Order Trading =|\n" + INFO[1])
-
-            if ST[0] == True and ST[1] == "trading" and Type == "buy" and "bls" not in STRATEGY:  ## Dev112
-                ST = Insert_ckloss(order_id, 'bxinth', BuyStopLoss, BuyCutLoss, 0)
+                    ST = ck_close_order(bxin, order_id, coin, 'sell', exchange)
+            if ST[0] == True and ST[1] == "close" and Type == "buy" and strategy == "bts":  ## Dev112
+                ST = Insert_ckloss(order_id,exchange, BuyStopLoss, BuyCutLoss, 0)
                 if ST == "OK":
                     ST = Insert_OrderBuy(order_id, exchange, time.strftime('%Y-%m-%d %H:%M:%S'), coin, qty, rate, 'buy')
                     print("DEBUG Status Insert OrderBuy " + ST)
@@ -4552,9 +4551,6 @@ class YourBot(telepot.Bot):
                                         \nApply --> Completed ", reply_markup=mainmenu)
                         ## Sync Balance with Exchange ##
                         STRATEGY.clear()
-                        #INFO=sync_balance_coin(bxin,exchange,coin,chat_id)
-                        #if INFO != "": ## Return Error ##
-                        #    bot.sendMessage(chat_id,INFO)
 
                     else:
                         bot.sendMessage(chat_id,
@@ -4563,7 +4559,7 @@ class YourBot(telepot.Bot):
                 else:
                     STRATEGY.clear()
 
-            elif ST[0] == True and ST[1] == "close" and Type == "buy" and "bls" in STRATEGY:  ## Dev112
+            elif ST[0] == True and ST[1] == "close" and Type == "buy" and strategy == "bls":  ## Dev112
                 # CKCLOSE.append('ckclose_buy_apply')
                 print("DEBUG Insert StopRisk =>" + str(BuyStopRisk) + "StopBuy =>" + str(BuyStopBuy))
                 # bot.sendMessage(chat_id,"Apply BST Strategy or not?\n /Apply\n/No")
@@ -4590,7 +4586,7 @@ class YourBot(telepot.Bot):
                 else:
                     STRATEGY.clear()
 
-            elif ST[0] == True  and ST[1] == "close" and Type == "sell":
+            elif ST[0] == True  and ST[1] == "close" and Type == "sell" and strategy == "cts":
                 print("DEBUG Insert Ckloss StopLoss " + str(SellStopLoss) + " CutLoss " + str(SellCutLoss))
                 ST = Insert_ckloss(order_id, exchange, SellStopLoss, SellCutLoss, 0)
                 if ST == "OK":
@@ -4611,11 +4607,129 @@ class YourBot(telepot.Bot):
                     else:
                         bot.sendMessage(chat_id,
                                         "!! Apply Strategy Trailing Stop to Order Sell " + order_id + "--> Failed !! ")
-
                         STRATEGY.clear()
 
                 else:
                     STRATEGY.clear()
+
+    def check_trading_wait(self,exchange, chat_id):
+        #print("2.Check Strategy income" + str(STRATEGY))
+        INFO_WAIT = ""
+        INFO_RES=""
+        ST = Get_OpenOrder(exchange, 'trading')
+        if str(ST) == "()":
+            return False
+        for order in list(ST):
+            Time = (order[2])
+            order_id = (order[1])
+            coin = (order[3])
+            Type = (order[4])
+            rate = (order[5])
+            volumn = (order[6])
+            exchange=(order[9])
+            strategy=(order[10])
+            qty = (order[7])
+            ####### Open order trading wait ###
+            fee = 0.0025
+            volumn = volumn - (volumn * fee)
+            INFO = check_coin_list(bxin, coin, str(format_floatc(rate, 4)), str(format_floatc(volumn, 4)), 'buy')
+            print(INFO)
+            if INFO[0] == True:
+               INFO_WAIT+=("---------\n"+INFO[1]+"|"+str(coin).lower()+"|"+str(strategy).lower()+"\n")
+               #INFO_WAIT+="---------\n"
+            else:
+                continue
+        if INFO_WAIT != "":
+            INFO_RES += "[ Open Order Trading ]\n"
+            INFO_RES+="[Bids]\n"
+
+            INFO_RES += INFO_WAIT
+        INFO_WAIT = ""
+        bot.sendMessage(chat_id, INFO_RES)
+
+        ### Order buy wait trading ##
+        ST=Get_OrderBuy(exchange,'trading')
+        if str(ST) == "()":
+            return False
+        for order in list(ST):
+            Time = (order[1])
+            order_id = (order[0])
+            coin = (order[2])
+            rate = (order[4])
+            qty = (order[3])
+
+            fee = 0.0025
+            volumn=(qty/rate)
+            volumn = volumn - (volumn * fee)
+            INFO = check_coin_list(bxin, coin, str(format_floatc(rate, 4)), str(format_floatc(volumn, 4)), 'sell')
+            print(INFO)
+            if INFO[0] == True:
+                INFO_WAIT+=(INFO[1]+"|"+str(coin).lower()+"|bts\n")
+            else:
+                continue
+
+        if INFO_WAIT != "":
+            INFO_RES+="[ OrderSell Trading BTS ]\n"
+            INFO_RES+="[Asks]"
+            INFO_RES+=INFO_WAIT
+        INFO_WAIT=""
+        bot.sendMessage(chat_id, INFO_RES)
+
+        ST=Get_OrderSale(exchange,'trading')
+        if str(ST) == "()":
+            return False
+        for order in list(ST):
+            Time = (order[1])
+            order_id = (order[0])
+            coin = (order[2])
+            rate = (order[4])
+            qty = (order[3])
+
+            fee = 0.0025
+            volumn=(qty/rate)
+            volumn = volumn - (volumn * fee)
+            INFO = check_coin_list(bxin, coin, str(format_floatc(rate, 4)), str(format_floatc(volumn, 4)), 'sell')
+            if INFO[0] == True:
+                INFO_WAIT+=(INFO[1]+"|"+str(coin).lower()+"|cts")
+            else:
+                continue
+
+        if INFO_WAIT != "":
+            INFO_RES += "[ OrderSell Trading CTS ]\n"
+            INFO_RES += "[Asks]"
+            INFO_RES += INFO_WAIT
+        INFO_WAIT = ""
+        bot.sendMessage(chat_id, INFO_RES)
+
+        ST=Get_OrderStopBuy(exchange,'trading')
+        if str(ST) == "()":
+            return False
+        for order in list(ST):
+            Time = (order[1])
+            order_id = (order[0])
+            coin = (order[2])
+            rate = (order[4])
+            qty = (order[3])
+
+            fee = 0.0025
+            volumn=(qty/rate)
+            volumn = volumn - (volumn * fee)
+            INFO = check_coin_list(bxin, coin, str(format_floatc(rate, 4)), str(format_floatc(volumn, 4)), 'buy')
+            if INFO[0] == True:
+                INFO_WAIT+=(INFO[1]+"|"+str(coin).lower()+"|"+str(strategy).lower())
+            else:
+                continue
+
+        if INFO_WAIT != "":
+            INFO_RES += "[ OrderBuy Trading BLS ]\n"
+            INFO_RES += "[Bids]"
+            INFO_RES += INFO_WAIT
+        bot.sendMessage(chat_id, INFO_RES)
+
+        #if INFO_RES != "":
+        #    bot.sendMessage(chat_id,INFO_RES)
+        #else:
+        #   bot.sendMessage(chat_id,"No order Wait !!")
 
 
 TOKEN = telegrambot
@@ -4636,6 +4750,8 @@ while True:
             bot.cts('bxinth', adminid)
             ####################
             bot.check_close_order('bxinth', adminid)
+            ###################
+            bot.check_close_openorder_trading('bxinth', adminid)
     time.sleep(10)
 #    print("Admin ChatID "+str(adminid))
 #    ST = bot.bts('bxinth', adminid)

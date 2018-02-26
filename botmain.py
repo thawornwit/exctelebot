@@ -795,7 +795,7 @@ def get_coin_information(id, symbol):
         INFO += str("LastPrice:" + str(format_floatc((info['info']['last_price']),4)) + "\n")
         INFO += "|-----------------------| \n"
         ST = id.fetch_order_book(symbol)
-        print(ST)
+        #print(ST)
         count = 0
         INFO += ("|= LAST BX ORDER =|\n")
         INFO+=("[ BIDS ]\n")
@@ -993,6 +993,8 @@ def ck_close_order_sim(order_id, symbol, Type, exchange):
             print("Update Open Order " + order_id + " failed")
             return (False,"cancel")
 
+
+
 def ck_close_order(id, order_id, symbol, Type, exchange):
     lastprice = get_lastprice(id, symbol)
     if lastprice == "failed":
@@ -1005,7 +1007,7 @@ def ck_close_order(id, order_id, symbol, Type, exchange):
         print("Open Rate:" + str(OpenRate))
         if is_number(OpenRate) == True:
             last_rate=get_coin_lastorder(id,symbol,'buy')
-            if lastprice >= OpenRate and OpenRate <= last_rate[0]:
+            if lastprice >= OpenRate and OpenRate <= float(last_rate[0]):
                 ST = Update_OpenOrder(order_id, exchange, 'close')
                 if ST == "OK":
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to closed ..")
@@ -1027,7 +1029,7 @@ def ck_close_order(id, order_id, symbol, Type, exchange):
         print("Open Rate:" + str(OpenRate))
         if is_number(OpenRate) == True:
             last_rate = get_coin_lastorder(id, symbol, 'sell')
-            if lastprice <= OpenRate and OpenRate >= last_rate[0]:
+            if lastprice <= OpenRate and OpenRate >= float(last_rate[0]):
                 ST = Update_OpenOrder(order_id, exchange, 'close')
                 if ST == "OK":
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to closed ..")
