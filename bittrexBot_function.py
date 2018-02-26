@@ -56,6 +56,43 @@ def Update_OrderSale(UUID, Exchange, Status):
     except:
         return "Failed"
 
+
+### Update Rate @@@
+def Update_OrderBuy_Rate(UUID, Exchange, Rate):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "UPDATE order_buy SET Rate=%s WHERE UUID=%s AND Exchange=%s"
+        cursor.execute(sql, (Rate, UUID, Exchange))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+
+def Update_OrderStopBuy_Rate(UUID, Exchange, Rate):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "UPDATE order_stopbuy SET Rate=%s WHERE UUID=%s AND Exchange=%s"
+        cursor.execute(sql, (Rate, UUID, Exchange))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+
+def Update_OrderSale_Rate(UUID, Exchange, Rate):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "UPDATE order_sale SET Rate=%s WHERE UUID=%s AND Exchange=%s"
+        cursor.execute(sql, (Rate, UUID, Exchange))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
 ## Insert CoinBalance ##
 def Insert_CoinBlance(Exchange,Coin,Total,Used,Free,ChatID):
     try:

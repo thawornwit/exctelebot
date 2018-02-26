@@ -303,8 +303,6 @@ def buy_trailling_stop_custom_sim(UUID, Exchange, LastPrice,StopPoint):
         if CutLossPrice >= LastPrice:
             return ('CutLoss', CutLossPrice)
 
-
-
 def format_float(f):
     return "%.5f" % f
 
@@ -796,32 +794,21 @@ def get_coin_information(id, symbol):
         INFO += str("Change:" + str(info['info']['change']) + "\n")
         INFO += str("LastPrice:" + str(format_floatc((info['info']['last_price']),4)) + "\n")
         INFO += "|-----------------------| \n"
-        #for infom in (info['info']):
-           # if infom == "orderbook":
-                #for order in info['info'][infom]:
-                #    if order == "asks":
-                #        INFO += "|- Asks -| \n"
-                #        for data in (info['info']['orderbook']['asks']):
-                #            INFO += str(data + ":" + str(info['info']['orderbook']['asks'][data]) + "\n")
-                #    if order == "bids":
-                 #       INFO += "|- Bids -| \n"
-                 #       for data in (info['info']['orderbook']['bids']):
-                 #           INFO += str(data + ":" + str(info['info']['orderbook']['bids'][data]) + "\n")
-              #  continue
         ST = id.fetch_order_book(symbol)
+        print(ST)
         count = 0
         INFO += ("|= LAST BX ORDER =|\n")
         INFO+=("[ BIDS ]\n")
         for data in ST['bids']:
-            INFO +=(" "+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
             count += 1
+            INFO +=(""+str(count)+"|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
             if count == 5:
                 break
         count = 0
         INFO += ("[ ASKS ]\n")
         for data in ST['asks']:
-            INFO += (" "+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
             count += 1
+            INFO += (""+str(count)+"|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
             if count == 5:
                 break
         INFO +="|-----------------------| \n"
@@ -839,6 +826,90 @@ def get_coin_information(id, symbol):
         print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
         print(type(e).__name__, e.args, )
+
+def get_coin_lastorder(id, symbol,type):
+    try:
+        INFO=""
+        ST = id.fetch_order_book(symbol)
+        #print(ST)
+        count = 0
+        if type == "buy":
+            for data in ST['bids']:
+                count += 1
+                return (str(format_floatc((data[0]),4)),str(format_floatc((data[1]),4)))
+                if count == 1:
+                    break
+        count = 0
+        if type == "sell":
+            for data in ST['asks']:
+                count += 1
+                return (str(format_floatc((data[0]),4)),str(format_floatc((data[1]),4)))
+                if count == 1:
+                    break
+
+    except ccxt.DDoSProtection as e:
+        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+    except ccxt.RequestTimeout as e:
+        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+    except ccxt.ExchangeNotAvailable as e:
+        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+    except ccxt.AuthenticationError as e:
+        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+    except ccxt.ExchangeError as e:
+        print(type(e).__name__, e.args, )
+
+def check_coin_list(id, symbol,rate,volumn,type):
+    try:
+        INFO=""
+        order_list = id.fetch_order_book(symbol)
+        if type == "buy":
+            count = 0
+            for data in order_list['bids']:
+                count += 1
+                rate_ck=str(format_floatc((data[0]), 4))
+                volumn_ck= str(format_floatc((data[1]), 4))
+                #print(rate_ck+"|"+volumn_ck)
+                if str(rate) == str(rate_ck) and str(volumn_ck) == str(volumn):
+                    return (True,""+str(count)+"|"+str(rate_ck) + "|" + str(volumn_ck) + "\n")
+                    break
+                else:
+                    INFO += ("" + str(count) + "|" + str(rate_ck) + "|" + str(volumn_ck) + "\n")
+                    continue
+        elif type == "sell":
+            count = 0
+            for data in order_list['asks']:
+                count += 1
+                rate_ck =format_floatc((data[0]), 4)
+                volumn_ck =format_floatc((data[1]), 4)
+                if str(rate) == str(rate_ck) and str(volumn) == str(volumn_ck):
+                    return (True,""+str(count)+"|"+str(rate_ck) + "|" + str(volumn_ck) + "\n")
+                    break
+                else:
+                    INFO += ("" + str(count) + "|" + str(rate_ck) + "|" + str(volumn_ck) + "\n")
+                    continue
+
+        return(False,"Not found order")
+
+
+    except ccxt.DDoSProtection as e:
+        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+    except ccxt.RequestTimeout as e:
+        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+    except ccxt.ExchangeNotAvailable as e:
+        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+    except ccxt.AuthenticationError as e:
+        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+    except ccxt.ExchangeError as e:
+        print(type(e).__name__, e.args, )
+
+#def check_close_trader():
+
+
+
+
+
+
+
 
 
 #######################
@@ -880,6 +951,8 @@ def get_openorder(exchange, Type, coin):
 
 # def apply_trailing_stop(lastprice):
 
+### CHECK CLOSE ORDER ##
+
 def ck_close_order_sim(order_id, symbol, Type, exchange):
     lastprice = get_lastprice_sim(symbol,exchange)
     if lastprice == "failed":
@@ -895,10 +968,10 @@ def ck_close_order_sim(order_id, symbol, Type, exchange):
                 ST = Update_OpenOrder(order_id, exchange, 'close')
                 if ST == "OK":
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to closed")
-                    return True
+                    return (True,"close")
                 else:
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to failed")
-                    return False
+                    return (False,"close")
     if Type == 'buy' and order_id != 0 and order_id != None:
         OpenRate = Get_Rate_OpenOrder(order_id, exchange, symbol, Type)
         print("Open Rate:" + str(OpenRate))
@@ -907,20 +980,18 @@ def ck_close_order_sim(order_id, symbol, Type, exchange):
                 ST = Update_OpenOrder(order_id, exchange, 'close')
                 if ST == "OK":
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to closed")
-                    return True
+                    return (True,"close")
                 else:
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to failed")
-                    return False
+                    return (False,"close")
     if Type == 'cancle' and order_id != 0 and order_id != None:
         ST = Update_OpenOrder(order_id, exchange, 'close')
         if ST == "OK":
             print("Update Open Order " + order_id + " to cancel")
-            return True
+            return (True,"cancel")
         else:
             print("Update Open Order " + order_id + " failed")
-            return False
-
-
+            return (False,"cancel")
 
 def ck_close_order(id, order_id, symbol, Type, exchange):
     lastprice = get_lastprice(id, symbol)
@@ -933,34 +1004,57 @@ def ck_close_order(id, order_id, symbol, Type, exchange):
         OpenRate = Get_Rate_OpenOrder(order_id, exchange, symbol, Type)
         print("Open Rate:" + str(OpenRate))
         if is_number(OpenRate) == True:
-            if lastprice >= OpenRate:
+            last_rate=get_coin_lastorder(id,symbol,'buy')
+            if lastprice >= OpenRate and OpenRate <= last_rate[0]:
                 ST = Update_OpenOrder(order_id, exchange, 'close')
                 if ST == "OK":
-                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to closed")
-                    return True
+                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to closed ..")
+                    return (True,"close")
                 else:
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to failed")
-                    return False
+                    return (False,"close")
+            else:
+                ST = Update_OpenOrder(order_id, exchange, 'trading')
+                if ST == "OK":
+                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to trading ..")
+                    return (True,"trading")
+                else:
+                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to trading and failed")
+                    return (False,"trading")
+
     if Type == 'buy' and order_id != 0 and order_id != None:
         OpenRate = Get_Rate_OpenOrder(order_id, exchange, symbol, Type)
         print("Open Rate:" + str(OpenRate))
         if is_number(OpenRate) == True:
-            if lastprice <= OpenRate:
+            last_rate = get_coin_lastorder(id, symbol, 'sell')
+            if lastprice <= OpenRate and OpenRate >= last_rate[0]:
                 ST = Update_OpenOrder(order_id, exchange, 'close')
                 if ST == "OK":
-                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to closed")
-                    return True
+                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to closed ..")
+                    return (True,"close")
                 else:
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to failed")
-                    return False
+                    return (False,"close")
+            else:
+                ST = Update_OpenOrder(order_id, exchange, 'trading')
+                if ST == "OK":
+                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to trading ..")
+                    return (True,"trading")
+                else:
+                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to trading and failed")
+                    return (False,"trading")
+
     if Type == 'cancle' and order_id != 0 and order_id != None:
         ST = Update_OpenOrder(order_id, exchange, 'cancel')
         if ST == "OK":
             print("Update Open Order " + order_id + " to cancel")
-            return True
+            return (True,"cancel")
         else:
             print("Update Open Order " + order_id + " failed")
-            return False
+            return (False,"cancel")
+
+
+### SYNC BALANCE ###
 
 def sync_balance_coin(id,Exchange,Coin,ChatID):
     try:
@@ -1014,7 +1108,6 @@ def sync_balance_coin(id,Exchange,Coin,ChatID):
         return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
         return (str(e) + 'Exchange Error')
-
 
 def sync_balance_all(id,Exchange,ChatID):
     try:
@@ -1073,26 +1166,50 @@ def sync_balance_all(id,Exchange,ChatID):
 def main():
     # bxin=ccxt.bxinth()
     bxin = ccxt.bxinth({
-        'apiKey': '8c9c30602acc',
-        'secret': 'e7906fb559d2',
+        'apiKey': '063689a6d467',
+        'secret': '69e49ad534c5',
         "enableRateLimit": True,
     })
-    ChatID=259669700
-    CK = Get_CoinBlance('bxinth','LTC', str(ChatID))
-    if CK != "faile":
-        for bl in list(CK):
-            coin=(bl[2])
-            total=format_floatc(bl[3],5)
-            used=format_floatc(bl[4],5)
-            free=format_floatc(bl[5],5)
-        print("\n|==Balance "+coin+" ==|\
-                \n  Coin: "+coin+ "\
-                \n  Total:"+total+"\
-                \n  Used:"+used+"\
-                \n  Free:"+free+"\
-                \n|===============|")
+   # ChatID=259669700
+    #CK = Get_CoinBlance('bxinth','LTC', str(ChatID))
+   # if CK != "faile":
+   #   for bl in list(CK):
+   #         coin=(bl[2])
+   ##         total=format_floatc(bl[3],5)
+    #        used=format_floatc(bl[4],5)
+    #        free=format_floatc(bl[5],5)
+    #    print("\n|==Balance "+coin+" ==|\
+    #            \n  Coin: "+coin+ "\
+    #            \n  Total:"+total+"\
+    #            \n  Used:"+used+"\
+    #            \n  Free:"+free+"\
+    #            \n|===============|")
 
-        print(sync_balance_all(bxin,'bxinth',str(ChatID)))
+    #volumn = format_floatc((float(volumn) - (float(volumn) * fee)), 4)
+    #bot.sendMessage(chat_id, "" + emoji.emojize(':hourglass:') + " Sell under Processing .. ")
+    vl=1.11111111111111
+    vl=vl-(vl*0.0025)
+    price=450.0000
+
+    #OID=sale_coin(bxin,'LTC/THB',float(format_floatc(vl,4)),float(format_floatc(price,4)))
+    #print(OID)
+    INFO=get_coin_information(bxin,'LTC/THB')
+    print(INFO)
+    print(str(format_floatc(price,4)))
+    print(str(format_floatc(vl,4)))
+    INFO=check_coin_list(bxin,'OMG/THB',str(format_floatc(price,4)),str(format_floatc(vl,4)),'buy')
+    print(INFO)
+    if INFO != None:
+        if INFO[0] == True:
+            print(INFO[1])
+    #else:
+    #    print("Not Found !!")
+
+    print(get_coin_lastorder(bxin,'LTC/THB','asks'))
+    #if INFO[0] == True:
+     #   print(INFO[1])
+        #print(bxin.fetch_balance())
+       # print(sync_balance_all(bxin,'bxinth',str(ChatID)))
 
     #INFO=Update_Balance_Exc('bxinth','THB','THB',5,'buy',"C",str(ChatID))
     #if INFO[0] == True:
