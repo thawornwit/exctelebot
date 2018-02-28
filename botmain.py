@@ -786,7 +786,7 @@ def cancel_coin(id, order_id, symbol, exchange):
         return (str(e) + 'Exchange Error')
 
 
-def get_coin_information(id, symbol):
+def get_coin_information(id, symbol,line):
     try:
         INFO = "|= COIN INFORMATION =| \n"
         info = (id.fetch_ticker(symbol))
@@ -802,14 +802,14 @@ def get_coin_information(id, symbol):
         for data in ST['bids']:
             count += 1
             INFO +=(""+str(count)+"|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
-            if count == 5:
+            if count == line:
                 break
         count = 0
         INFO += ("[ ASKS ]\n")
         for data in ST['asks']:
             count += 1
             INFO += (""+str(count)+"|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
-            if count == 5:
+            if count == line:
                 break
         INFO +="|-----------------------| \n"
 
@@ -1046,7 +1046,7 @@ def ck_close_order(id, order_id, symbol, Type, exchange):
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to trading and failed")
                     return (False,"trading")
 
-    if Type == 'cancle' and order_id != 0 and order_id != None:
+    if Type == 'cancel' and order_id != 0 and order_id != None:
         ST = Update_OpenOrder(order_id, exchange, 'cancel')
         if ST == "OK":
             print("Update Open Order " + order_id + " to cancel")
@@ -1054,6 +1054,9 @@ def ck_close_order(id, order_id, symbol, Type, exchange):
         else:
             print("Update Open Order " + order_id + " failed")
             return (False,"cancel")
+
+    if order_id == 0 and order_id == None:
+        return(False,"nocase")
 
 
 ### SYNC BALANCE ###
@@ -1189,17 +1192,17 @@ def main():
 
     #volumn = format_floatc((float(volumn) - (float(volumn) * fee)), 4)
     #bot.sendMessage(chat_id, "" + emoji.emojize(':hourglass:') + " Sell under Processing .. ")
-    vl=1.11111111111111
+    vl=1.4285714285714286
     vl=vl-(vl*0.0025)
-    price=450.0000
+    price=630.0000
 
     #OID=sale_coin(bxin,'LTC/THB',float(format_floatc(vl,4)),float(format_floatc(price,4)))
     #print(OID)
-    INFO=get_coin_information(bxin,'LTC/THB')
+    INFO=get_coin_information(bxin,'OMG/THB')
     print(INFO)
     print(str(format_floatc(price,4)))
     print(str(format_floatc(vl,4)))
-    INFO=check_coin_list(bxin,'OMG/THB',str(format_floatc(price,4)),str(format_floatc(vl,4)),'buy')
+    INFO=check_coin_list(bxin,'OMG/THB',str(format_floatc(price,4)),str(format_floatc(vl,4)),'sell')
     print(INFO)
     if INFO != None:
         if INFO[0] == True:
