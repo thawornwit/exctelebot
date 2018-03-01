@@ -413,7 +413,7 @@ def Update_Balance_Exc(Exchange,Coin,Market,Qty,Type,SB,ChatID):
 
             if  str(CK) == "OK":
                 INFO+="\n-------------\
-                \n|= Update Balance =|\
+                \n[= UPDATE BALANCE =]\
                 \nCoin: "+Coin+"\
                 \nTotal:"+str(Total)+"\
                 \nFree:"+str(Free)+"\
@@ -434,7 +434,7 @@ def get_balance(Exchange,Coin,ChatID):
             total = format_floatc(bl[3], 5)
             used = format_floatc(bl[4], 5)
             free = format_floatc(bl[5], 5)
-            INFO=("\n|-- Blance " + coin +"--|\
+            INFO=("\n[- BALANCE " + coin +"-]\
                     \n  Total:" + total + "\
                     \n  Used:" + used + "\
                     \n  Free:" + free + "\
@@ -530,7 +530,7 @@ def sale_coin_res(symbol, volumn, price, exchange):
         if Oid != 0 and Oid != None:
             Total = volumn * price
             ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), str(symbol), 'sell', price, volumn, Total,
-                                  'open', exchange,'sts')
+                                  'open', exchange,'cts')
             if ST == "OK":
                 return Oid
             else:
@@ -555,14 +555,7 @@ def sale_coin(id, symbol,volumn, price):
                 number = ''.join(random.sample("0123456789", 7))
                 Oid = number
             if Oid != 0 and Oid != None:
-                #Total = volumn
-                #Qty = volumn * price
-                #ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), str(symbol), 'sell', price, volumn, Total,
-                #                      'open', exchange)
-                #if ST == "OK":
                 return Oid
-                #else:
-                #    return "Error,Insert Database open order failed"
             else:
                 return Result['info']['error']
         else:
@@ -661,7 +654,7 @@ def buy_coin_res(symbol, volumn, price, exchange):
             Total = volumn
             Qty = volumn / price
             ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), symbol, 'buy', price, Qty, Total, 'open',
-                                  exchange,'bss')
+                                  exchange,'bls')
             if ST == "OK":
                 return Oid
             else:
@@ -788,7 +781,7 @@ def cancel_coin(id, order_id, symbol, exchange):
 
 def get_coin_information(id, symbol,line):
     try:
-        INFO = "|= COIN INFORMATION =| \n"
+        INFO = "[= COIN INFORMATION =] \n"
         info = (id.fetch_ticker(symbol))
         INFO += str("Coin:" + symbol + "\n")
         INFO += str("Change:" + str(info['info']['change']) + "\n")
@@ -797,7 +790,7 @@ def get_coin_information(id, symbol,line):
         ST = id.fetch_order_book(symbol)
         #print(ST)
         count = 0
-        INFO += ("|= LAST BX ORDER =|\n")
+        INFO += ("[= LAST BX ORDER =]\n")
         INFO+=("[ BIDS ]\n")
         for data in ST['bids']:
             count += 1
@@ -1192,17 +1185,17 @@ def main():
 
     #volumn = format_floatc((float(volumn) - (float(volumn) * fee)), 4)
     #bot.sendMessage(chat_id, "" + emoji.emojize(':hourglass:') + " Sell under Processing .. ")
-    vl=1.4285714285714286
-    vl=vl-(vl*0.0025)
-    price=630.0000
+    vl=5.2
+   # vl=vl-(vl*0.0025)
+    price=19
 
     #OID=sale_coin(bxin,'LTC/THB',float(format_floatc(vl,4)),float(format_floatc(price,4)))
     #print(OID)
-    INFO=get_coin_information(bxin,'OMG/THB')
+    INFO=get_coin_information(bxin,'POW/THB',100)
     print(INFO)
     print(str(format_floatc(price,4)))
     print(str(format_floatc(vl,4)))
-    INFO=check_coin_list(bxin,'OMG/THB',str(format_floatc(price,4)),str(format_floatc(vl,4)),'sell')
+    INFO=check_coin_list(bxin,'POW/THB',str(format_floatc(price,4)),str(format_floatc(vl,4)),'sell')
     print(INFO)
     if INFO != None:
         if INFO[0] == True:
