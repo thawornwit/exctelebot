@@ -312,8 +312,9 @@ def format_floatc(f,num):
                      #% f
 
 
-def symbols(id):
-    exchange = getattr(ccxt, id)({
+
+def symbols(exc):
+    exchange = getattr(ccxt,exc)({
         # 'proxy':'https://cors-anywhere.herokuapp.com/',
     })
 
@@ -321,10 +322,10 @@ def symbols(id):
     markets = exchange.load_markets()
 
     # output a list of all market symbols
-    for symbol in exchange.symbols:
+    for symbol in exchange.load_markets():
         print(symbol)
-        # tuples = list(ccxt.Exchange.keysort(markets).items())
-        # print(tuples)
+        #tuples = list(ccxt.Exchange.)
+        #print(str(tuples))
         # output a table of all markets
         # dump(pink('{:<15} {:<15} {:<15} {:<15}'.format('id', 'symbol', 'base', 'quot')))
         # for (k, v) in tuples:
@@ -431,16 +432,16 @@ def get_balance(Exchange,Coin,ChatID):
     if CK != "Failed":
         for bl in list(CK):
             coin = str(bl[2])
-            total = format_floatc(bl[3], 5)
-            used = format_floatc(bl[4], 5)
-            free = format_floatc(bl[5], 5)
-            INFO=("\n[- BALANCE " + coin +"-]\
-                    \n  Total:" + total + "\
-                    \n  Used:" + used + "\
-                    \n  Free:" + free + "\
+            total = format_floatc(bl[3], 8)
+            used = format_floatc(bl[4], 8)
+            free = format_floatc(bl[5], 8)
+            INFO=("\n[- BALANCE " + coin +" -]\
+                    \n  Total:[" + total + "]\
+                    \n  Used:[" + used + "]\
+                    \n  Free:["+ free + "]\
                     \n----------------")
         if float(total) > 0:
-            return INFO
+            return (True,free,INFO)
         elif float(total) <= 0:
             return False
     else:
@@ -781,30 +782,30 @@ def cancel_coin(id, order_id, symbol, exchange):
 
 def get_coin_information(id, symbol,line):
     try:
-        INFO = "[= COIN INFORMATION =] \n"
+        INFO = "[COIN INFORMATION] \n"
         info = (id.fetch_ticker(symbol))
         INFO += str("Coin:" + symbol + "\n")
         INFO += str("Change:" + str(info['info']['change']) + "\n")
         INFO += str("LastPrice:" + str(format_floatc((info['info']['last_price']),4)) + "\n")
-        INFO += "|-----------------------| \n"
+        INFO += "|--------------------| \n"
         ST = id.fetch_order_book(symbol)
         #print(ST)
         count = 0
-        INFO += ("[= LAST BX ORDER =]\n")
+        INFO += ("[LAST BX ORDER]\n")
         INFO+=("[ BIDS ]\n")
         for data in ST['bids']:
             count += 1
-            INFO +=(""+str(count)+"|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
+            INFO +=("("+str(count)+")|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
             if count == line:
                 break
         count = 0
         INFO += ("[ ASKS ]\n")
         for data in ST['asks']:
             count += 1
-            INFO += (""+str(count)+"|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
+            INFO += ("("+str(count)+")|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
             if count == line:
                 break
-        INFO +="|-----------------------| \n"
+        INFO +="|--------------------| \n"
 
         #print(INFO)
         return INFO
@@ -941,6 +942,28 @@ def get_openorder(exchange, Type, coin):
             "" + time + "\nO:/" + order_id + "\nC:" + coin + "\nR:" + str(rate) + "\nQ:" + str(qty) + "\nT:" + str(
                 total))
 
+def get_lastcoin(id, symbol):
+    try:
+        INFO=""
+        info = (id.fetch_ticker(symbol))
+        ch=str(info['info']['change'])
+        ls=str(format_floatc((info['info']['last_price']),2))
+        #vl=str(format_floatc((info['info']['volume_24hours']),2))
+        coin = check_sys("data=" +symbol+ ";echo ${data%/*}")
+        INFO += str("["+coin+"]|"+ls+"|"+ch+"\n")
+        return(INFO)
+
+    except ccxt.DDoSProtection as e:
+        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+    except ccxt.RequestTimeout as e:
+        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+    except ccxt.ExchangeNotAvailable as e:
+        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+    except ccxt.AuthenticationError as e:
+        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+    except ccxt.ExchangeError as e:
+        print(type(e).__name__, e.args, )
+
 
 # def apply_trailing_stop(lastprice):
 
@@ -1057,6 +1080,7 @@ def ck_close_order(id, order_id, symbol, Type, exchange):
 def sync_balance_coin(id,Exchange,Coin,ChatID):
     try:
         INFO=""
+        Coin = check_sys("data=" + Coin + ";echo ${data%/*}")
         account_balance = id.fetch_balance({'type': 'account'})
         for coin in ((account_balance['total'])):
             Total=(str(format_floatc(account_balance['total'][coin], 6)))
@@ -1191,19 +1215,22 @@ def main():
 
     #OID=sale_coin(bxin,'LTC/THB',float(format_floatc(vl,4)),float(format_floatc(price,4)))
     #print(OID)
-    INFO=get_coin_information(bxin,'POW/THB',100)
-    print(INFO)
-    print(str(format_floatc(price,4)))
-    print(str(format_floatc(vl,4)))
-    INFO=check_coin_list(bxin,'POW/THB',str(format_floatc(price,4)),str(format_floatc(vl,4)),'sell')
-    print(INFO)
-    if INFO != None:
-        if INFO[0] == True:
-            print(INFO[1])
+    #INFO=get_coin_information(bxin,'POW/THB',100)
+    #print(INFO)
+    #print(str(format_floatc(price,4)))
+    #print(str(format_floatc(vl,4)))
+    #INFO=check_coin_list(bxin,'POW/THB',str(format_floatc(price,4)),str(format_floatc(vl,4)),'sell')
+    #print(INFO)
+    #if INFO != None:
+    #    if INFO[0] == True:
+    #        print(INFO[1])
     #else:
     #    print("Not Found !!")
 
-    print(get_coin_lastorder(bxin,'LTC/THB','asks'))
+    #print(get_coin_lastorder(bxin,'LTC/THB','asks'))
+    #print(get_lastcoin(bxin,'LTC/THB'))
+    #SK=get_coin_information(bxin,'LTC/THB',2)
+    #print(SK)
     #if INFO[0] == True:
      #   print(INFO[1])
         #print(bxin.fetch_balance())
