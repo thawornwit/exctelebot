@@ -435,11 +435,11 @@ def get_balance(Exchange,Coin,ChatID):
             total = format_floatc(bl[3], 8)
             used = format_floatc(bl[4], 8)
             free = format_floatc(bl[5], 8)
-            INFO=("\n[- BALANCE " + coin +" -]\
-                    \n  Total:[" + total + "]\
-                    \n  Used:[" + used + "]\
-                    \n  Free:["+ free + "]\
-                    \n----------------")
+            INFO=("\n[BALANCE (" + coin +")]\
+                   \nTotal:[" + total + "]\
+                   \nUsed:[" + used + "]\
+                   \nFree:["+ free + "]\
+                   \n----------------")
         if float(total) > 0:
             return (True,free,INFO)
         elif float(total) <= 0:
@@ -971,7 +971,7 @@ def get_lastcoin(id, symbol):
 
 def ck_close_order_sim(order_id, symbol, Type, exchange):
     lastprice = get_lastprice_sim(symbol,exchange)
-    if lastprice == "failed":
+    if lastprice == "failed" and lastprice == None:
         print("!!! Can't get lastprice ")
         return False
     print("Current Lasprice sim " + str(lastprice))
@@ -1013,7 +1013,7 @@ def ck_close_order_sim(order_id, symbol, Type, exchange):
 
 def ck_close_order(id, order_id, symbol, Type, exchange):
     lastprice = get_lastprice(id, symbol)
-    if lastprice == "failed":
+    if lastprice == "failed" and lastprice == None:
         print("!!! Can't get lastprice ")
         return False
     print("Current Lasprice " + str(lastprice))
@@ -1192,6 +1192,8 @@ def main():
         'secret': '69e49ad534c5',
         "enableRateLimit": True,
     })
+
+    #print(bxin.
    # ChatID=259669700
     #CK = Get_CoinBlance('bxinth','LTC', str(ChatID))
    # if CK != "faile":
