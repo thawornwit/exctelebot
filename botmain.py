@@ -3,7 +3,7 @@ from bittrex_tokens import *  ## for accessing telegram api
 import matplotlib  ## for ploting graph
 import os
 import sys
-
+from operator import itemgetter
 import time
 from pprint import pprint
 
@@ -71,8 +71,17 @@ def cal_stop_point(buy,p_point):
 def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
     #global number_point
     #BuyRate = Get_BittrexOrder_buy(UUID, Exchange, 'order_buy', 'Rate')
+    StopLoss_Point = 0
     StopLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Stoploss')
+    StopLoss = (list(StopLoss.split(',')))
+    if len(StopLoss) > 1:
+        print("Using Custom Mode !!")
+        HaveCustom = True
+    else:
+        HaveCustom = False
+        StopLoss = int(StopLoss[0])
     CutLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Cutloss')
+
     print("--------------------------")
     print('Start Bot Cutloss CTS..')
     print('1.StartRate=>' + str(BuyRate))
@@ -83,8 +92,8 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
     print('LastPrice=>' + str(LastPrice))
     CutLossPrice = (BuyRate - (BuyRate * (CutLoss / 100)))
     print('4.CutLossPrice=>' + str(CutLossPrice))
-    MinProfit = (BuyRate + (BuyRate * (StopLoss / 100)))
-    print("Minimum Profit=>" + str(MinProfit))
+    #MinProfit = (BuyRate + (BuyRate * (StopLoss / 100)))
+    #print("Minimum Profit=>" + str(MinProfit))
     print("Start Cost =>" + str(BuyRate) + " Price Up =>" + str(LastPrice - BuyRate) + " (+/-) =>" + str(
         (100 * (LastPrice - BuyRate)) / BuyRate) + "%")
     print("--------------------------")
@@ -92,7 +101,14 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
     if LastPrice > BuyRate:
         if StopLoss != "" or StopLoss != 0:
             StopLoss_Point_bf = Get_BittrexDB(UUID, Exchange, 'ckloss', 'StoplossPoint') ## Stop loss before
-            StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))  ## current stop loss
+            if HaveCustom == False:
+                StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))  ## current stop loss
+            if HaveCustom == True:
+                for StopPoint in StopLoss:
+                    if StopLoss_Point_bf < int(StopPoint):
+                        StopLoss_Point = int(StopPoint)
+                        break
+            #StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))  ## current stop loss
             print('StopLoss_Point=' + str(StopLoss_Point))
             print('StopLoss_Point_Action=' + str(StopLoss_Point_bf))
             if LastPrice > StopLoss_Point_bf:  ## Price Up
@@ -120,7 +136,8 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
                 return ('StopLoss', LastPrice,StopLoss)
     elif LastPrice == BuyRate:
         Update_Stoppoint(UUID, Exchange, '0')
-        StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))
+        if HaveCustom == False:
+            StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))
     elif LastPrice < BuyRate:
         if BuyRate != "failed":
             CutLossPrice = (BuyRate - (BuyRate * (CutLoss / 100)))
@@ -132,8 +149,24 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
 def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
     #global number_point
     #BuyRate = Get_BittrexOrder_buy(UUID, Exchange, 'order_buy', 'Rate')
-    StopLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Stoploss')
-    CutLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Cutloss')
+    #StopLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Stoploss')
+    #StopLoss=int(StopLoss)
+
+
+    #CutLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Cutloss')
+    #CutLoss=int(CutLoss)
+    StopLoss_Point_bf=0
+    StopLoss_Point=0
+    StopLoss = Get_BittrexDB(UUID,Exchange, 'ckloss', 'Stoploss')
+    StopLoss = (list(StopLoss.split(',')))
+    if len(StopLoss) > 1:
+       print("Using Custom Mode !!")
+       HaveCustom=True
+    else:
+        HaveCustom=False
+        StopLoss = int(StopLoss[0])
+    CutLoss = Get_BittrexDB(UUID,Exchange, 'ckloss', 'Cutloss')
+
     print("--------------------------")
     print('1.Start Bot cutloss BTS ..')
     print('2.BuyRate=>' + str(BuyRate))
@@ -144,8 +177,8 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
     print('LastPrice=>' + str(LastPrice))
     CutLossPrice = (BuyRate - (BuyRate * (CutLoss / 100)))
     print('4.CutLossPrice=>' + str(CutLossPrice))
-    MinProfit = (BuyRate + (BuyRate * (StopLoss / 100)))
-    print("Minimum Profit=>" + str(MinProfit))
+    #MinProfit = (BuyRate + (BuyRate * (StopLoss / 100)))
+    #print("Minimum Profit=>" + str(MinProfit))
     print("Buy Cost =>" + str(BuyRate) + " Price Up =>" + str(LastPrice - BuyRate) + " (+/-) =>" + str(
         (100 * (LastPrice - BuyRate)) / BuyRate) + "%")
     print("--------------------------")
@@ -153,7 +186,13 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
     if LastPrice > BuyRate:
         if StopLoss != "" or StopLoss != 0:
             StopLoss_Point_bf = Get_BittrexDB(UUID, Exchange, 'ckloss', 'StoplossPoint') ## Stop loss before
-            StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))  ## current stop loss
+            if HaveCustom == False:
+                StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))  ## current stop loss
+            if HaveCustom == True:
+                for StopPoint in StopLoss:
+                    if StopLoss_Point_bf < int(StopPoint):
+                        StopLoss_Point=int(StopPoint)
+                        break
             print('StopLoss_Point=' + str(StopLoss_Point))
             print('StopLoss_Point_Action=' + str(StopLoss_Point_bf))
             if LastPrice > StopLoss_Point_bf:  ## Price Up
@@ -181,7 +220,13 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
                 return ('StopLoss', LastPrice,StopLoss)
     elif LastPrice == BuyRate:
         Update_Stoppoint(UUID, Exchange, '0')
-        StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))
+        if HaveCustom == False:
+            StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))
+        #if HaveCustom == True:
+        #    for StopPoint in StopLoss:
+        #        if int(StopLoss_Point_bf) < int(StopPoint):
+        #            StopLoss_Point = int(StopPoint)
+        #            break
     elif LastPrice < BuyRate:
         if BuyRate != "failed":
             CutLossPrice = (BuyRate - (BuyRate * (CutLoss / 100)))
@@ -189,7 +234,7 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
         if CutLossPrice >= LastPrice:
             return ('CutLoss', CutLossPrice,CutLoss)
 
-## Find price deep dows ## Find proce low and Buy
+## Find price deep dows ## Find price low and Buy
 def buy_StopBuy_shadow(UUID, Exchange, LastPrice,StartRate):
     StopRisk = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopRisk')
     StopBuy = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopBuy')
@@ -313,23 +358,35 @@ def format_floatc(f,num):
 
 
 
-def symbols(exc):
-    exchange = getattr(ccxt,exc)({
-        # 'proxy':'https://cors-anywhere.herokuapp.com/',
-    })
+def symbols(exc,base_market):
+    try:
+        exchange_found = exc in ccxt.exchanges
+        if exchange_found:
+            exchange = getattr(ccxt, exc)({
+                # 'proxy':'https://cors-anywhere.herokuapp.com/',
+            })
+            # load all markets from the exchange
+            markets = exchange.load_markets()
+            #print("Matket => " + str(markets))
+            # output a list of all market symbols
+            #dump(green(id), 'has', len(exchange.symbols), 'symbols:', exchange.symbols)
+            tuples = list(ccxt.Exchange.keysort(markets).items())
+            # debug
+            #for (k, v) in tuples:
+            #   print(v['info']['secondary_currency'])
+            # output a table of all markets
+            dump(pink('{:<9} {:<9} {:<9} {:<9}'.format('id', 'symbol', 'base', 'quote')))
+            for (k, v) in tuples:
+                if v['quote'] == str(base_market):
+                    dump('{:<9} {:<9} {:<9} {:<9}'.format(v['id'], v['symbol'], v['base'], v['quote'], v['info']))
+        else:
 
-    # load all markets from the exchange
-    markets = exchange.load_markets()
+            dump('Exchange ' + red(id) + ' not found')
+            print_supported_exchanges()
 
-    # output a list of all market symbols
-    for symbol in exchange.load_markets():
-        print(symbol)
-        #tuples = list(ccxt.Exchange.)
-        #print(str(tuples))
-        # output a table of all markets
-        # dump(pink('{:<15} {:<15} {:<15} {:<15}'.format('id', 'symbol', 'base', 'quot')))
-        # for (k, v) in tuples:
-        # dump('{:<15} {:<15} {:<15} {:<15}'.format(v['id'], v['symbol'], v['base'], v['quote']))
+    except Exception as e:
+        dump('[' + type(e).__name__ + ']', str(e))
+        #dump("Usage: python " + sys.argv[0], green('id'))
 
 
 def get_positive_accounts(balance):
@@ -638,7 +695,7 @@ def buy_coin_bss(id, symbol, volumn, price):
 
 def buy_coin_res(symbol, volumn, price, exchange):
     number = ''.join(random.sample("0123456789", 8))
-    print('Number of randome is ' + number)
+    print("Number of randome is" +str(number))
     ## Insert Coin ####
     UUID = str(number)
     print(UUID)
@@ -669,7 +726,7 @@ def buy_coin_res(symbol, volumn, price, exchange):
 
 
 ### BTS Only ###
-def buy_coin_sim(symbol, volumn, price, exchange):
+def buy_coin_sim(symbol, volumn, price):
     number = ''.join(random.sample("0123456789", 8))
     print('Number of randome is ' + number)
     ## Insert Coin ####
@@ -685,14 +742,14 @@ def buy_coin_sim(symbol, volumn, price, exchange):
             number = ''.join(random.sample("0123456789", 7))
             Oid = number
         if Oid != 0 and Oid != None:
-            Total = volumn
-            Qty = volumn / price
-            ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), symbol, 'buy', price, Qty, Total, 'open',
-                                  exchange, 'bts')
-            if ST == "OK":
-                return Oid
-            else:
-                return "Error,Insert Database open order failed"
+            #Total = volumn
+            #Qty = volumn / price
+            #ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), symbol, 'buy', price, Qty, Total, 'open',
+            #                      exchange, 'bts')
+            #if ST == "OK":
+            return Oid
+            #else:
+            #    return "Error,Insert Database open order failed"
         else:
             return Result['info']['error']
 
@@ -700,7 +757,7 @@ def buy_coin_sim(symbol, volumn, price, exchange):
         return (str("Buy " + symbol + " Failed error is" + Result['info']['error']))
         # return 1
 
-def buy_coin(id, symbol, volumn, price, exchange):
+def buy_coin(id, symbol, volumn, price):
     try:
         Result = id.create_order(symbol, 'market', 'buy', volumn, price, {'leverage': 3})
         print(Result)
@@ -712,14 +769,14 @@ def buy_coin(id, symbol, volumn, price, exchange):
                 number = ''.join(random.sample("0123456789", 7))
                 Oid = number
             if Oid != 0 and Oid != None:
-                Total = volumn
-                Qty = volumn / price
-                ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), symbol, 'buy', price, Qty, Total, 'open',
-                                      exchange,'bts')
-                if ST == "OK":
-                    return Oid
-                else:
-                    return "Error,Insert Database open order failed"
+                #Total = volumn
+                #Qty = volumn / price
+                #ST = Insert_OpenOrder(Oid, time.strftime('%Y-%m-%d %H:%M:%S'), symbol, 'buy', price, Qty, Total, 'open',
+                 #                     exchange,'bts')
+                #if ST == "OK":
+                return Oid
+                #else:
+                   # return "Error,Insert Database open order failed"
             else:
                 return Result['info']['error']
 
@@ -784,22 +841,27 @@ def get_coin_information(id, symbol,line):
     try:
         INFO = "[COIN INFORMATION] \n"
         info = (id.fetch_ticker(symbol))
+        print(info)
+        bid=(info['info']['orderbook']['bids']['volume'])
+        aks=(info['info']['orderbook']['asks']['volume'])
+
         INFO += str("Coin:" + symbol + "\n")
-        INFO += str("Change:" + str(info['info']['change']) + "\n")
+        INFO += str("Change:" + str(info['info']['change']) + " %\n")
+        INFO += str("[Buy/Sell]:"+str(format_floatc(((bid/aks)*100),2))+" %\n")
         INFO += str("LastPrice:" + str(format_floatc((info['info']['last_price']),4)) + "\n")
         INFO += "|--------------------| \n"
         ST = id.fetch_order_book(symbol)
         #print(ST)
         count = 0
         INFO += ("[LAST BX ORDER]\n")
-        INFO+=("[ BIDS ]\n")
+        INFO+=("[ BIDS ][Vl:"+str(format_floatc(bid,4))+"]\n")
         for data in ST['bids']:
             count += 1
             INFO +=("("+str(count)+")|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
             if count == line:
                 break
         count = 0
-        INFO += ("[ ASKS ]\n")
+        INFO += ("[ ASKS ][Vl:"+str(format_floatc(aks,4))+"]\n")
         for data in ST['asks']:
             count += 1
             INFO += ("("+str(count)+")|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
@@ -809,6 +871,65 @@ def get_coin_information(id, symbol,line):
 
         #print(INFO)
         return INFO
+
+    except ccxt.DDoSProtection as e:
+        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+    except ccxt.RequestTimeout as e:
+        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+    except ccxt.ExchangeNotAvailable as e:
+        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+    except ccxt.AuthenticationError as e:
+        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+    except ccxt.ExchangeError as e:
+        print(type(e).__name__, e.args, )
+
+def good_coin_ck(id,exc,base_market):
+    try:
+        INFO=""
+        PBUY=[]
+        exchange_found = exc in ccxt.exchanges
+        if exchange_found:
+            exchange = getattr(ccxt, exc)({
+                    # 'proxy':'https://cors-anywhere.herokuapp.com/',
+            })
+                # load all markets from the exchange
+            markets = exchange.load_markets()
+                # print("Matket => " + str(markets))
+                # output a list of all market symbols
+                #dump(green(id), 'has', len(exchange.symbols), 'symbols:', exchange.symbols)
+            tuples = list(ccxt.Exchange.keysort(markets).items())
+           # print(str(tuples))
+                # debug
+                #for (k, v) in tuples:
+                #   print(v['info']['secondary_currency'])
+                # output a table of all markets
+            #INFO+=(('{:<10}{:<10}'.format('Coin','Buy/Sell(%)')))
+            PBUY.clear()
+            for (k, v) in tuples:
+                if v['quote'] == str(base_market):
+                    info = (id.fetch_ticker(v['symbol']))
+                    bid = (info['info']['orderbook']['bids']['volume'])
+                    aks = (info['info']['orderbook']['asks']['volume'])
+                    buy_sell=float(format_floatc(((bid / aks) * 100), 2))
+                    sell_buy=float(format_floatc(((aks / bid) * 100), 2))
+                    PBUY.append((v['base'],buy_sell,sell_buy))
+                    #INFO+=("\n"+('{:<10}{:<10}'.format(v['base'],str(format_floatc(((bid/aks)*100),2))+" %")))
+                    #dump('{:<9} {:<9} {:<9} {:<9}'.format(v['symbol'], v['base'], v['quote']))
+
+            return sorted(PBUY,key=itemgetter(1),reverse=True)
+            #return sorted(PBUY,key = lambda good: good[1])
+
+            #return sorted(PBUY, key=itemgetter(1))
+
+        else:
+
+            dump('Exchange ' + red(id) + ' not found')
+            print_supported_exchanges()
+
+        #info = (id.fetch_ticker(symbol))
+        #print(info)
+        #bid=(info['info']['orderbook']['bids']['volume'])
+        #aks=(info['info']['orderbook']['asks']['volume'])
 
     except ccxt.DDoSProtection as e:
         print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
@@ -856,6 +977,7 @@ def check_coin_list(id, symbol,rate,volumn,type):
     try:
         INFO=""
         order_list = id.fetch_order_book(symbol)
+        #print("OrderList>"+str(order_list))
         if type == "buy":
             count = 0
             for data in order_list['bids']:
@@ -896,6 +1018,72 @@ def check_coin_list(id, symbol,rate,volumn,type):
     except ccxt.ExchangeError as e:
         print(type(e).__name__, e.args, )
 
+
+def check_coin_list_sim(Coin,rate_ck,volumn_ck,type,exchange):
+        INFO=""
+        if type == "buy":
+            count = 0
+            ##Tor Dev
+            data_trading = Get_OpenOrder(exchange, 'trading')
+            if str(data_trading) == "()":
+                return False
+            ST=sorted(list(data_trading), key=itemgetter(4), reverse=True)
+            print("List Trading Open order"+str(ST))
+            for order in list(ST):
+                Time = (order[2])
+                order_id = (order[1])
+                coin = (order[3])
+                Type = (order[4])
+                rate = (order[5])
+                volumn = (order[6])
+                exchange = (order[9])
+                strategy = (order[10])
+                qty = (order[7])
+                if coin == Coin:
+                    count += 1
+                    print("Coin "+coin+"\nrate:"+str(format_floatc(rate,4))+" rate_ck:"+str(rate_ck)+"\nVolumne"+str(format_floatc(volumn,4))+"VolumnCK"+str(volumn_ck))
+                    if str(rate_ck) == str(format_floatc(rate,4)) and str(volumn_ck) == str(format_floatc(volumn,4)):
+                        print ("Acccess to comppare coin rate check and volum check for check Await Order")
+                        return (True,""+str(count)+"|"+str(rate_ck) + "|" + str(volumn_ck) + "\n")
+                    else:
+                        continue
+                else:
+                    continue
+
+            return (False, "Not found order")
+
+        elif type == "sell":
+            count = 0
+            data_trading = Get_OpenOrder(exchange, 'trading')
+            if str(data_trading) == "()":
+                return False
+            ST = sorted(list(data_trading), key=itemgetter(4), reverse=True)
+            print("List Trading Open order" + str(ST))
+            for order in list(ST):
+                Time = (order[2])
+                order_id = (order[1])
+                coin = (order[3])
+                Type = (order[4])
+                rate = (order[5])
+                volumn = (order[6])
+                exchange = (order[9])
+                strategy = (order[10])
+                qty = (order[7])
+
+                if coin == Coin:
+                    count += 1
+                    print("Coin " + coin + "\nrate:" + str(format_floatc(rate, 4)) + " rate_ck:" + str(
+                        rate_ck) + "\nVolumne" + str(format_floatc(volumn, 4)) + "VolumnCK" + str(volumn_ck))
+                    if str(rate_ck) == str(format_floatc(rate, 4)) and str(volumn_ck) == str(format_floatc(volumn, 4)):
+                        print("Acccess to comppare coin rate check and volum check for check Await Order")
+                        return (True, "" + str(count) + "|" + str(rate_ck) + "|" + str(volumn_ck) + "\n")
+                    else:
+                        continue
+                else:
+                    continue
+            return (False, "Not found order")
+        else:
+            return(False,"Not found order")
 #def check_close_trader():
 
 
@@ -942,16 +1130,24 @@ def get_openorder(exchange, Type, coin):
             "" + time + "\nO:/" + order_id + "\nC:" + coin + "\nR:" + str(rate) + "\nQ:" + str(qty) + "\nT:" + str(
                 total))
 
-def get_lastcoin(id, symbol):
+def get_lastcoin(id,exc):
     try:
-        INFO=""
-        info = (id.fetch_ticker(symbol))
-        ch=str(info['info']['change'])
-        ls=str(format_floatc((info['info']['last_price']),2))
-        #vl=str(format_floatc((info['info']['volume_24hours']),2))
-        coin = check_sys("data=" +symbol+ ";echo ${data%/*}")
-        INFO += str("["+coin+"]|"+ls+"|"+ch+"\n")
-        return(INFO)
+        COINLIST = []
+        exchange_found = exc in ccxt.exchanges
+        if exchange_found:
+            exchange = getattr(ccxt,exc)({
+                # 'proxy':'https://cors-anywhere.herokuapp.com/',
+            })
+            markets = exchange.load_markets()
+            tuples = list(ccxt.Exchange.keysort(markets).items())
+            COINLIST.clear()
+            for (k, v) in tuples:
+                if v['quote'] == "THB":
+                    info = (id.fetch_ticker(v['symbol']))
+                    ch = str(info['info']['change'])
+                    ls = str(format_floatc((info['info']['last_price']),2))
+                    COINLIST.append((v['base'],format_floatc(float(ls),2),float(ch)))
+            return sorted(COINLIST, key=itemgetter(2), reverse=True)
 
     except ccxt.DDoSProtection as e:
         print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
@@ -971,7 +1167,7 @@ def get_lastcoin(id, symbol):
 
 def ck_close_order_sim(order_id, symbol, Type, exchange):
     lastprice = get_lastprice_sim(symbol,exchange)
-    if lastprice == "failed" and lastprice == None:
+    if lastprice == "failed" or lastprice == None:
         print("!!! Can't get lastprice ")
         return False
     print("Current Lasprice sim " + str(lastprice))
@@ -980,7 +1176,7 @@ def ck_close_order_sim(order_id, symbol, Type, exchange):
         OpenRate = Get_Rate_OpenOrder(order_id, exchange, symbol, Type)
         print("Open Rate:" + str(OpenRate))
         if is_number(OpenRate) == True:
-            if lastprice >= OpenRate:
+            if float(lastprice) >= float(OpenRate):
                 ST = Update_OpenOrder(order_id, exchange, 'close')
                 if ST == "OK":
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to closed")
@@ -988,11 +1184,20 @@ def ck_close_order_sim(order_id, symbol, Type, exchange):
                 else:
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to failed")
                     return (False,"close")
+            else:
+                ST = Update_OpenOrder(order_id, exchange, 'trading')
+                if ST == "OK":
+                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to trading")
+                    return (True, "trading")
+                else:
+                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to failed")
+                    return (False, "trading")
+
     if Type == 'buy' and order_id != 0 and order_id != None:
         OpenRate = Get_Rate_OpenOrder(order_id, exchange, symbol, Type)
         print("Open Rate:" + str(OpenRate))
         if is_number(OpenRate) == True:
-            if lastprice <= OpenRate:
+            if float(lastprice) <= float(OpenRate):
                 ST = Update_OpenOrder(order_id, exchange, 'close')
                 if ST == "OK":
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to closed")
@@ -1000,6 +1205,15 @@ def ck_close_order_sim(order_id, symbol, Type, exchange):
                 else:
                     print("Update Open Order " + order_id + " Type \"" + Type + "\" to failed")
                     return (False,"close")
+            else:
+                ST = Update_OpenOrder(order_id, exchange, 'trading')
+                if ST == "OK":
+                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to trading")
+                    return (True, "trading")
+                else:
+                    print("Update Open Order " + order_id + " Type \"" + Type + "\" to failed")
+                    return (False, "trading")
+
     if Type == 'cancle' and order_id != 0 and order_id != None:
         ST = Update_OpenOrder(order_id, exchange, 'close')
         if ST == "OK":
@@ -1192,6 +1406,16 @@ def main():
         'secret': '69e49ad534c5',
         "enableRateLimit": True,
     })
+    #info = bxin.fetch_ticker('DASH/THB')
+    #print("bids"+str(info['info']['orderbook']['bids']['volume']))
+    #print("asks"+str(info['info']['orderbook']['asks']['volume']))
+    #print(symbols('bxinth','THB'))
+    #CK=(good_coin_ck(bxin,'bxinth','THB'))
+    CK=get_lastcoin(bxin,'bxinth')
+    #sorted(CK, key=itemgetter(1), reverse=True)
+    #print(str(CK))
+    for i in CK:
+        print(str(i[0])+"|"+str(i[1])+"|"+str(i[2]))
 
     #print(bxin.
    # ChatID=259669700
@@ -1212,7 +1436,7 @@ def main():
     #volumn = format_floatc((float(volumn) - (float(volumn) * fee)), 4)
     #bot.sendMessage(chat_id, "" + emoji.emojize(':hourglass:') + " Sell under Processing .. ")
     vl=5.2
-   # vl=vl-(vl*0.0025)
+    vl=vl-(vl*0.0025)
     price=19
 
     #OID=sale_coin(bxin,'LTC/THB',float(format_floatc(vl,4)),float(format_floatc(price,4)))
@@ -1221,8 +1445,8 @@ def main():
     #print(INFO)
     #print(str(format_floatc(price,4)))
     #print(str(format_floatc(vl,4)))
-    #INFO=check_coin_list(bxin,'POW/THB',str(format_floatc(price,4)),str(format_floatc(vl,4)),'sell')
-    #print(INFO)
+    INFO=check_coin_list(bxin,'POW/THB',str(format_floatc(price,4)),str(format_floatc(vl,4)),'sell')
+    print(INFO)
     #if INFO != None:
     #    if INFO[0] == True:
     #        print(INFO[1])
@@ -1364,7 +1588,7 @@ def main():
             #print(str(data))
             #print(get_balance(bxin,'THB'))
             #print(bxin.fetch_balance())
-            #print(bxin.fetch_ticker('DASH/THB'))
+
             #print("----------------------------------------")
             #print(bxin.fetch_trades('DASH/THB',10000))
             #for trade in (bxin.fetch_trades('DASH/THB', 'xx')):

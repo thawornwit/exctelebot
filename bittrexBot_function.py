@@ -16,7 +16,6 @@ import requests
 
 REMOTE_SERVER = "www.google.com"
 ###########################
-
 global con
 
 ##################
@@ -295,7 +294,32 @@ def Get_Nsell(Exchange, Coin):
 
 
 
-##Ckloss BTS,STS
+##CkcustomLoss
+def Insert_cklosscustom(UUID, Exchange,Cutloss,Stoppoint1,Stoppoint2,Stoppoint3,Stoppoint4,Stoppoint5,Stoppoint6):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "INSERT INTO  `cklosscustom` (`UUID`,`Exchange`,`Cutloss`,`Point1`,`Point2`,`Point3`,`Point4`,`Point5`,`Point6`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        cursor.execute(sql, (UUID, Exchange,Cutloss,Stoppoint1,Stoppoint2,Stoppoint3,Stoppoint4,Stoppoint5,Stoppoint6))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+
+def Update_cklosscustom(UUID, Exchange,Stoppoint1,Stoppoint2,Stoppoint3,Stoppoint4,Stoppoint5,Stoppoint6):
+    try:
+        con = pymysql.connect(host='localhost', port=3306, user='root', passwd='123456', db='bittrex_bot')
+        cursor = con.cursor()
+        sql = "UPDATE cklosscustom SET Point1=%s,Point2=%s,Point3=%s,Point4=%s,Point5=%s,Point6=%s WHERE UUID=%s AND Exchange=%s "
+        cursor.execute(sql, (Stoppoint1,Stoppoint2,Stoppoint3,Stoppoint4,Stoppoint5,Stoppoint6, UUID, Exchange))
+        con.commit()
+        con.close()
+        return "OK"
+    except:
+        return "Failed"
+
+##Ckloss BTS,CTS
 
 def Insert_ckloss(UUID, Exchange, Stoploss, Cutloss, StoplossPoint):
     try:
@@ -344,6 +368,8 @@ def Update_Stoppoint(UUID, Exchange, StoplossPoint):
         return "OK"
     except:
         return "Failed"
+
+
 
 ################
 ## CkstopBuy ##
@@ -654,9 +680,12 @@ if __name__ == "__main__":
     #print(CK)
     #CK=Update_CoinBlance('bxinth','LTC',100,0,100,'342111')
     #print(CK)
-    CK=Get_CoinBlance('bxinth','BCH','342111')
+    #CK=Get_CoinBlance('bxinth','BCH','342111')
+    #print(CK)
+    #CK=Insert_cklosscustom('12345167','bxinth',3,1000,2000,3000,5000,6000,7000)
+    CK=Update_cklosscustom('12345167','bxinth',2,1000,2000,3000,5000,6000,7000)
+    #CK=Update_cklosscustom()
     print(CK)
-
     #ST=Update_Last_Price('900000','BTC/THB','bxinth')
     #ST=Get_OpenOrder('bxinth','open')
     #ST=insert_ordersale_test('bxinth','DASH/THB',100,31000,'sell')
