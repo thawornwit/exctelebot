@@ -1026,7 +1026,7 @@ def check_coin_list_sim(Coin,rate_ck,volumn_ck,type,exchange):
             ##Tor Dev
             data_trading = Get_OpenOrder(exchange, 'trading')
             if str(data_trading) == "()":
-                return False
+                return (False,"Data is null")
             ST=sorted(list(data_trading), key=itemgetter(4), reverse=True)
             print("List Trading Open order"+str(ST))
             for order in list(ST):
@@ -1056,7 +1056,7 @@ def check_coin_list_sim(Coin,rate_ck,volumn_ck,type,exchange):
             count = 0
             data_trading = Get_OpenOrder(exchange, 'trading')
             if str(data_trading) == "()":
-                return False
+                return (False, "Data is null")
             ST = sorted(list(data_trading), key=itemgetter(4), reverse=True)
             print("List Trading Open order" + str(ST))
             for order in list(ST):
@@ -1435,18 +1435,18 @@ def main():
 
     #volumn = format_floatc((float(volumn) - (float(volumn) * fee)), 4)
     #bot.sendMessage(chat_id, "" + emoji.emojize(':hourglass:') + " Sell under Processing .. ")
-    vl=5.2
-    vl=vl-(vl*0.0025)
-    price=19
-
+    #vl=5.2
+    #vl=vl-(vl*0.0025)
+    #price=19
+    print(Get_OrderSale('bxinth','trading'))
     #OID=sale_coin(bxin,'LTC/THB',float(format_floatc(vl,4)),float(format_floatc(price,4)))
     #print(OID)
     #INFO=get_coin_information(bxin,'POW/THB',100)
     #print(INFO)
     #print(str(format_floatc(price,4)))
     #print(str(format_floatc(vl,4)))
-    INFO=check_coin_list(bxin,'POW/THB',str(format_floatc(price,4)),str(format_floatc(vl,4)),'sell')
-    print(INFO)
+    #INFO=check_coin_list(bxin,'POW/THB',str(format_floatc(price,4)),str(format_floatc(vl,4)),'sell')
+    #print(INFO)
     #if INFO != None:
     #    if INFO[0] == True:
     #        print(INFO[1])

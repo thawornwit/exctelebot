@@ -500,6 +500,19 @@ class YourBot(telepot.Bot):
 
             #print("1.Check Strategy income"+str(STRATEGY))
 
+            ## Calculate Percent ##
+            if msg['text'] == "10%" or msg['text'] == "20%" or msg['text'] == "25%" or msg['text'] == "40%" or\
+                msg['text'] == "45%" or  msg['text'] == "50%" or msg['text'] == "60%" or msg['text'] == "75%" or\
+                msg['text'] == "100%":
+                res=get_balance('bxinth','THB',chat_id)
+                price=msg['text']
+                buy = price.split("%")
+                if is_number(res[1]):
+                    buy=format_floatc(((float(buy[0])/100)*float(res[1])),2)
+                    bot.sendMessage(chat_id,"Buy "+str(price)+" % is "+str(buy)+" Bath" )
+                    msg['text']=str(buy)
+
+
             if msg['text'] == "/setroomtemp" and chat_id not in settingroomtemp:
                 bot.sendChatAction(chat_id, 'typing')
                 settingroomtemp.append(chat_id)
@@ -1495,8 +1508,8 @@ class YourBot(telepot.Bot):
                 Rate = msg['text']  ## Rate of coin
                 Rate = check_sys("data=" + Rate + ";echo ${data#*/}")
                 print("Rate is "+str(Rate))
-                if is_number(Rate) != True:
-                    bot.sendMessage(chat_id,"!! Enter Number only,Don't using text word\n Enter Coin Price Rate ?")
+                if is_number(Rate) != True or Rate <= "0":
+                    bot.sendMessage(chat_id,"!! Enter Number only,Don't using text word or typing number zero\n Enter Coin Price Rate ?")
                 else:
                     bot.sendMessage(chat_id,"Do you want to apply [CTS] Strategy or Not ?\
                     \n[/YES]\n[/NO]")
@@ -1509,17 +1522,20 @@ class YourBot(telepot.Bot):
             elif 'point_select_cts' in CKLOSS and is_number(msg['text'] == True):
                 STOPPOINT.clear()
                 CutLoss = msg['text']
-                Rate = float(Rate)
-                bot.sendMessage(chat_id, "CutLoss Price " + str(CutLoss) + "[%]\n >" + str(
+                if is_number(CutLoss) != True:
+                    bot.sendMessage(chat_id,"Enter Number Only!! \n Enter [CTS]CutLoss(%)")
+                else:
+                    Rate = float(Rate)
+                    bot.sendMessage(chat_id, "CutLoss Price " + str(CutLoss) + "[%]\n >" + str(
                     Rate - (Rate * (int(CutLoss) / 100))) + " Bath")  ## TOV DEV
-                bot.sendMessage(chat_id, "\
-                \n [StopPoint Mode] \
-                \n[/Auto] \
-                \n[/Custom]\
-                \n ------------")
-                COUNT = 0
-                CKLOSS.remove('point_select_cts')
-                CKLOSS.append('mode_sell')
+                    bot.sendMessage(chat_id, "\
+                    \n [StopPoint Mode] \
+                    \n[/Auto] \
+                    \n[/Custom]\
+                    \n ------------")
+                    COUNT = 0
+                    CKLOSS.remove('point_select_cts')
+                    CKLOSS.append('mode_sell')
             elif msg['text'] == "/Auto" and 'mode_sell' in CKLOSS:
                 if is_number(CutLoss) == True:
                     bot.sendMessage(chat_id, "Enter [CTS]StopPoint(%):")
@@ -1610,17 +1626,23 @@ class YourBot(telepot.Bot):
             elif 'bxinth' in BX and 'stoploss_sell1' in CKLOSS:
                 bot.sendChatAction(chat_id, 'typing')
                 Coin = COINTEMP[0]
+                point=True
                 if len(STOPPOINT) == 0:
                     StopLoss = msg['text']
-                    if simtest == "yes":
+                    if is_number(StopLoss) != True:
+                        bot.sendMessage(chat_id,"Enter Number Only \nEnter [CTS]StopPoint(%):")
+                        point=False
+                    if simtest == "yes" and point == True:
                         lastprice = get_lastprice_sim(Coin, 'bxinth')
-                    else:
+                        bot.sendMessage(chat_id, "Start[StopLoss] " + str(StopLoss) + "[%]\n >" + str(
+                            lastprice + (lastprice * (int(StopLoss) / 100))) + " Bath")  ## TOV DEV
+                    elif simtest != "yes" and point == True:
                         lastprice = get_lastprice(bxin,Coin)
-                    bot.sendMessage(chat_id, "Start[StopLoss] " + str(StopLoss) + "[%]\n >" + str(
+                        bot.sendMessage(chat_id, "Start[StopLoss] " + str(StopLoss) + "[%]\n >" + str(
                         lastprice + (lastprice * (int(StopLoss) / 100))) + " Bath")  ## TOV DEV
                 #Rate_ck=(get_coin_lastorder(bxin,Coin,'buy'))
                 #Rate = check_sys("data=" + Rate + ";echo ${data#*/}")
-                if is_number(Rate) == True and Rate != "0":
+                if is_number(Rate) == True and Rate != "0" and point == True:
                     if simtest != "yes":
                         BL = Update_Balance_Exc('bxinth', Coin, 'THB', float(Sell), 'sell',"O", str(chat_id))
                         if BL[0] != True:
@@ -1656,7 +1678,6 @@ class YourBot(telepot.Bot):
                         SK = Insert_ckloss(Oid, 'bxinth', str(StopLoss), CutLoss, '0')
                         print("Insert Database ID>" + str(Oid) + "\nStopLoss >" + str(StopLoss) + "\nCutLoss>" + str(
                             CutLoss))
-                        # SK="OK"
                     else:
                         print("Insert Database ID>" + str(Oid) + "\nStopLoss >" + str(StopLoss) + "\nCutLoss>" + str(
                             CutLoss))
@@ -1670,25 +1691,15 @@ class YourBot(telepot.Bot):
                             Oid) + " --> Successfully")
                         CKCOMMAND.clear()
                         BX.clear()
-                        # SK="OK"
-                    #if is_number(Oid) == True  and SK == "OK":
-                    #    bot.sendMessage(chat_id, "" + emoji.emojize(':clipboard:') + "[= Result =]\
-                    #        \nOrder:" + str(Oid) + "\
-                    #        \nSell:" + Coin + "\
-                    #        \nPrice:" + str(float(Buy)) + " Bath \
-                    #        \nRate:" + str(float(Rate)) + " Bath \
-                    #        \nQuality:" + str(format_floatc((float(Buy) / float(Rate)), 4)) \
-                    #        )
-                else:
+                        COINTEMP.insert(0, "")
+
+                elif is_number(Rate) != True or float(Rate) <= 0:
                     print("DEBUG2 " + str(is_number(Rate)))
                     bot.sendMessage(chat_id, "!! Enter number only and don't using rate by zero ")
                     bot.sendMessage(chat_id, "Now[Last]:/" + str(get_lastprice(bxin, Coin))+"\
                     \nNow [Bids]:/"+str(get_coin_lastorder(bxin,Coin,'buy')[0])+"\
                     \nNow[Asks]:/"+str(get_coin_lastorder(bxin, Coin, 'sell')[0])+"")
                     bot.sendMessage(chat_id, "Enter Coin Price Rate ?", reply_markup=cancelmarkup)
-                BX.clear()
-                COINTEMP.insert(0, "")
-
 
 
         ### BUY COIN ########
@@ -1696,7 +1707,7 @@ class YourBot(telepot.Bot):
                 bot.sendChatAction(chat_id, 'typing')
                 Rate = msg['text']  ## Rate of coin
                 Rate = check_sys("data=" + Rate + ";echo ${data#*/}")
-                if is_number(Rate) != True:
+                if is_number(Rate) != True or float(Rate) <= 0:
                     bot.sendMessage(chat_id,"Enter number Only ,Don't using text word!!\nEnter Coin Price Rate ?")
                 else:
                     bot.sendMessage(chat_id, "Do you want to apply [BTS] Strategy or Not ?\
@@ -1709,23 +1720,27 @@ class YourBot(telepot.Bot):
             elif 'point_select_buy1' in CKLOSS and is_number(msg['text'] == True):
                 STOPPOINT.clear()
                 CutLoss = msg['text']
-                Buy=int(Buy)
-                Rate=int(Rate)
-                print("Buy >"+str(Buy))
-                rate_cutloss=(Rate - (Rate * (int(CutLoss) / 100)))
-                profit_cutloss=(Buy - (Buy*(int(CutLoss) /100)))
-                bot.sendMessage(chat_id,"CutLoss Price "+str(CutLoss)+"[%]\
-                \n >"+str(rate_cutloss)+"\
-                \n >"+str(profit_cutloss)+" Bath") ## TOV DEV
+                if is_number(CutLoss) != True:
+                    bot.sendMessage(chat_id, 'Enter Number Only!! \n Enter [BTS]CutLoss(%):')
+                else:
+                    print("Buy =>"+str(Buy))
+                    Buy1=float(Buy)
+                    Rate=int(Rate)
+                    print("Buy >"+str(Buy1))
+                    rate_cutloss=(Rate - (Rate * (int(CutLoss) / 100)))
+                    profit_cutloss=(Buy1 - (Buy1*(int(CutLoss) /100)))
+                    bot.sendMessage(chat_id,"CutLoss Price "+str(CutLoss)+"[%]\
+                    \n >"+str(rate_cutloss)+"\
+                    \n >"+str(profit_cutloss)+" Bath") ## TOV DEV
 
-                bot.sendMessage(chat_id, "\
-                \n [StopPoint Mode] \
-                \n[/Auto] \
-                \n[/Custom]\
-                \n ------------")
-                COUNT = 0
-                CKLOSS.remove('point_select_buy1')
-                CKLOSS.append("buy_mode")
+                    bot.sendMessage(chat_id, "\
+                    \n [StopPoint Mode] \
+                    \n[/Auto] \
+                    \n[/Custom]\
+                    \n ------------")
+                    COUNT = 0
+                    CKLOSS.remove('point_select_buy1')
+                    CKLOSS.append("buy_mode")
             elif msg['text'] == "/Auto" and "buy_mode" in CKLOSS:
                 if is_number(CutLoss) == True:
                     bot.sendMessage(chat_id, "Enter BTS StopPoint(%):")
@@ -1766,7 +1781,7 @@ class YourBot(telepot.Bot):
                     msg['text'] = ""
                 else:
                     bot.sendMessage(chat_id, 'Enter number only !! \
-                        \nEnter Price StopLoss(%):')
+                        \nEnter [BTS]CutLoss(%):')
 
             elif 'bxinth' in BX and 'RES_ACT_BUY' in BX and msg['text'] == "/NO" or msg['text'] == "NO" and 'RES_ACT_BUY' in BX :
                 bot.sendChatAction(chat_id, 'typing')
@@ -1818,21 +1833,29 @@ class YourBot(telepot.Bot):
             #################################
             elif 'bxinth' in BX and 'stoploss_buy1' in CKLOSS:
                 bot.sendChatAction(chat_id, 'typing')
+                point=True
+                Oid = ""
+                Bal = ""
                 Coin = COINTEMP[0]
                 #Rate = msg['text']
                 if len(STOPPOINT) == 0:
                     StopLoss = msg['text']
-                    if simtest == "yes":
+                    if is_number(StopLoss) != True:
+                        bot.sendMessage(chat_id,"Enter Number Only!! \nEnter [BTS]StopPoint(%)")
+                        point=False
+                    if simtest == "yes" and point == True:
                         lastprice = get_lastprice_sim(Coin,'bxinth')
-                    else:
+                        bot.sendMessage(chat_id, "Start[StopLoss] " + str(StopLoss) + "[%]\n >" + str(
+                        lastprice + (lastprice * (int(StopLoss) / 100))) + " Bath")  ## TOV D
+                    elif simtest != "yes" and point == True:
                         lastprice = get_lastprice(bxin,Coin)
-                    bot.sendMessage(chat_id, "Start[StopLoss] " + str(StopLoss) + "[%]\n >" + str(
-                        lastprice + (lastprice * (int(StopLoss) / 100))) + " Bath")  ## TOV DEV
-                Oid=""
-                Bal=""
+                        bot.sendMessage(chat_id, "Start[StopLoss] " + str(StopLoss) + "[%]\n >" + str(
+                        lastprice + (lastprice * (int(StopLoss) / 100))) + " Bath")  ## TOV D
+
+
                 Rate = check_sys("data="+str(Rate)+";echo ${data#*/}")
                 print("Rate Debug" + str(Rate))
-                if is_number(Rate) == True and Rate != "0":
+                if is_number(Rate) == True and Rate != "0" and point == True:
                     print("Rate1 " + str(Rate))
                     print("Coin1 " + str(Coin))
                     print("Buy" + str(Buy))
@@ -1901,6 +1924,10 @@ class YourBot(telepot.Bot):
                         ORDERBUY.append(Buy)
                         ORDERBUY.append(Rate)
                         ORDERBUY.append(str(format_float(float(Buy) / float(Rate))))
+                        ###############
+                        BX.clear()
+                        CKLOSS.clear()
+                        COINTEMP.insert(0, "")
                         NT == "Noti"
                     elif Oid != "":
                          bot.sendMessage(chat_id,"Exchange Error =>"+str(Oid))
@@ -1909,15 +1936,13 @@ class YourBot(telepot.Bot):
                         BX.clear()
                     else:
                         BX.clear()
-                else:
+                elif is_number(Rate) != True or float(Rate) <= 0:
                     bot.sendMessage(chat_id, "!! Enter number only and don't using rate by zero ")
                     bot.sendMessage(chat_id, "Now[Last]:/" + str(get_lastprice(bxin, Coin))+"\
                     \nNow [Asks]:/"+str(get_coin_lastorder(bxin,Coin,'sell')[0])+"\
                     \nNow[Bids]:/" + str(get_coin_lastorder(bxin, Coin, 'buy')[0]) + "")
                     bot.sendMessage(chat_id, "Enter Coin Price Rate ?", reply_markup=cancelmarkup)
-                BX.clear()
-                CKLOSS.clear()
-                COINTEMP.insert(0, "")
+
 
             ## SELECT COIN ##
             ### BTC BX ###
@@ -2841,10 +2866,10 @@ class YourBot(telepot.Bot):
                     if is_number(ST) == True and CK_BUY != True:
                         CK1 = Update_OrderSale(order_id, exchange, 'trading')
                         CK2 = Update_OrderSale_Rate(order_id, exchange, lastprice) ## Update last price to sell
-                        #if CK1 == "OK" and CK2 == "OK":
-                        #   bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Out => Completed")
-                        #else:
-                        #    bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Out => Completed")
+                        if CK1 == "OK" and CK2 == "OK":
+                           bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Out => Completed")
+                        else:
+                            bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Out => Completed")
                     else:
                         CK1 = Update_OrderBuy(order_id, exchange, 'trading')
                         CK2 = Update_OrderBuy_Rate(order_id, exchange, lastprice) ## Update last price to sell
@@ -2883,10 +2908,10 @@ class YourBot(telepot.Bot):
                             bot.sendMessage(chat_id, INFO)
                     time.sleep(1)
                 #both simtest and real test
-                if is_number(ST) == True or simtest == "yes" or simtest != "yes":
-                    profit = (((lastprice / rate) * qty) - qty)
-                    profit_fee = (profit - (profit * fee))
-                    bot.sendMessage(chat_id, "!!Trading Sell Direct Completed !!\
+                    if is_number(ST) == True:
+                        profit = (((lastprice / rate) * qty) - qty)
+                        profit_fee = (profit - (profit * fee))
+                        bot.sendMessage(chat_id, "!!Trading Sell Direct Completed !!\
                              \nCoin:" + coin + "\
                              \nOrder:" + str(order_id) + "\
                              \nBuy:" + str(qty) + "\
@@ -2894,13 +2919,13 @@ class YourBot(telepot.Bot):
                              \nChange Fee " + str(fee) + "\
                              \nProfit " + str(format_float(profit_fee)) + " Bath" \
                                         , reply_markup=mainmenu)
-                    CK1 = Update_OrderSale(order_id, exchange, 'trading')
-                    CK2 = Update_OrderSale_Rate(order_id,exchange,lastprice)
-                    if CK1 == "OK" and CK2 == "OK":
-                        bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Out => Completed")
-                    else:
-                        bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Out => Completed")
-                    return True
+                        CK1 = Update_OrderSale(order_id, exchange, 'trading')
+                        CK2 = Update_OrderSale_Rate(order_id,exchange,lastprice)
+                        if CK1 == "OK" and CK2 == "OK":
+                            bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Out => Completed")
+                        else:
+                            bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Trading Out => Completed")
+                        return True
         else:
             bot.sendMessage(chat_id, "Not Found OrderBuy " + order_id + ",Please verify !!")
             return False
@@ -5287,6 +5312,7 @@ class YourBot(telepot.Bot):
                     INFO = check_coin_list(bxin, coin, str(format_floatc(rate, 4)), str(format_floatc(volumn, 4)), 'buy')
                 else:
                     INFO = check_coin_list_sim(coin, str(format_floatc(rate, 4)), str(format_floatc(volumn, 4)),'buy','bxinth')
+                print("Information >"+str(INFO))
                 if INFO[0] == True:
                     count += 1
                     INFO_WAIT += ("---------\
@@ -5302,7 +5328,7 @@ class YourBot(telepot.Bot):
                     INFO_WAIT = ""
 
         ### ORDER CTS ####
-        ST = Get_OrderSale(exchange, 'trading')
+        ST = Get_OrderSale(exchange,'trading')
         if str(ST) == "()":
             return False
         print("[= Remaining Order Sell(CTS) trading  =]")
@@ -5354,6 +5380,7 @@ class YourBot(telepot.Bot):
                     INFO = check_coin_list(bxin, coin, str(format_floatc(rate, 4)), str(format_floatc(volumn, 4)), 'sell')
                 else:
                     INFO = check_coin_list_sim(coin, str(format_floatc(rate, 4)), str(format_floatc(volumn, 4)),'sell','bxinth')
+                print("Information Sale =>"+str(INFO))
                 if INFO[0] == True:
                     count += 1
                     INFO_WAIT += ("---------\
