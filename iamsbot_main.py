@@ -1599,7 +1599,7 @@ class YourBot(telepot.Bot):
                         BX.clear()
                 else:
                     print("DEBUG2 " + str(is_number(Rate)))
-                    bot.sendMessage(chat_id, "!! Enter number only and don't using rate = 0 ")
+                    bot.sendMessage(chat_id, "!! Enter number only and don't using rate by zero ")
                     bot.sendMessage(chat_id, "Now[Last]:/" + str(get_lastprice(bxin, Coin))+"\
                     \nNow [Bids]:/"+str(get_coin_lastorder(bxin,Coin,'buy')[0])+"\
                     \nNow[Asks]:/" + str(get_coin_lastorder(bxin, Coin, 'sell')[0])+"")
@@ -1681,7 +1681,7 @@ class YourBot(telepot.Bot):
                     #        )
                 else:
                     print("DEBUG2 " + str(is_number(Rate)))
-                    bot.sendMessage(chat_id, "!! Enter number only and don't using rate = 0 ")
+                    bot.sendMessage(chat_id, "!! Enter number only and don't using rate by zero ")
                     bot.sendMessage(chat_id, "Now[Last]:/" + str(get_lastprice(bxin, Coin))+"\
                     \nNow [Bids]:/"+str(get_coin_lastorder(bxin,Coin,'buy')[0])+"\
                     \nNow[Asks]:/"+str(get_coin_lastorder(bxin, Coin, 'sell')[0])+"")
@@ -1808,7 +1808,7 @@ class YourBot(telepot.Bot):
                         CKCOMMAND.clear()
                         BX.clear()
                 else:
-                    bot.sendMessage(chat_id, "!! Enter number only and don't using rate = 0 ")
+                    bot.sendMessage(chat_id, "!! Enter number only and don't using rate by zero ")
                     bot.sendMessage(chat_id, "Now[Last]:/" + str(get_lastprice(bxin, Coin)) + "\
                        \nNow [Asks]:/" + str(get_coin_lastorder(bxin, Coin, 'sell')[0]) + "\
                        \nNow[Bids]:/" + str(get_coin_lastorder(bxin, Coin, 'buy')[0]) + "")
@@ -1910,7 +1910,7 @@ class YourBot(telepot.Bot):
                     else:
                         BX.clear()
                 else:
-                    bot.sendMessage(chat_id, "!! Enter number only and don't using rate = 0 ")
+                    bot.sendMessage(chat_id, "!! Enter number only and don't using rate by zero ")
                     bot.sendMessage(chat_id, "Now[Last]:/" + str(get_lastprice(bxin, Coin))+"\
                     \nNow [Asks]:/"+str(get_coin_lastorder(bxin,Coin,'sell')[0])+"\
                     \nNow[Bids]:/" + str(get_coin_lastorder(bxin, Coin, 'buy')[0]) + "")
