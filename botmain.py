@@ -874,14 +874,18 @@ def get_coin_information(id, symbol,line):
 
     except ccxt.DDoSProtection as e:
         print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
         print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
         print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
         print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
-        print(type(e).__name__, e.args, )
+        return (str(e) + 'Exchange Error')
 
 def good_coin_ck(id,exc,base_market):
     try:
@@ -933,14 +937,18 @@ def good_coin_ck(id,exc,base_market):
 
     except ccxt.DDoSProtection as e:
         print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
         print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
         print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
         print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
-        print(type(e).__name__, e.args, )
+        return (str(e) + 'Exchange Error')
 
 def get_coin_lastorder(id, symbol,type):
     try:
@@ -964,14 +972,18 @@ def get_coin_lastorder(id, symbol,type):
 
     except ccxt.DDoSProtection as e:
         print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
         print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
         print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
         print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
-        print(type(e).__name__, e.args, )
+        return (str(e) + 'Exchange Error')
 
 def check_coin_list(id, symbol,rate,volumn,type):
     try:
@@ -1009,14 +1021,18 @@ def check_coin_list(id, symbol,rate,volumn,type):
 
     except ccxt.DDoSProtection as e:
         print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
         print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
         print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
         print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
-        print(type(e).__name__, e.args, )
+        return (str(e) + 'Exchange Error')
 
 
 def check_coin_list_sim(Coin,rate_ck,volumn_ck,type,exchange):
@@ -1107,14 +1123,19 @@ def get_lastprice(id, symbol):
 
     except ccxt.DDoSProtection as e:
         print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        return (str(e)+'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
         print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        return (str(e)+'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
         print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
         print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        return (str(e)+'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
-        print(type(e).__name__, e.args, )
+        print(type(e).__name__, e.args,'Exchange Error' )
+        return (str(e)+'Exchange Error')
 
 
 def get_openorder(exchange, Type, coin):
@@ -1151,14 +1172,18 @@ def get_lastcoin(id,exc):
 
     except ccxt.DDoSProtection as e:
         print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
         print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
         print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
         print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
-        print(type(e).__name__, e.args, )
+        return (str(e) + 'Exchange Error')
 
 
 # def apply_trailing_stop(lastprice):
