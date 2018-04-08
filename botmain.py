@@ -108,6 +108,8 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
                     if StopLoss_Point_bf < int(StopPoint):
                         StopLoss_Point = int(StopPoint)
                         break
+                    else:
+                        StopLoss_Point = LastPrice
             #StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))  ## current stop loss
             print('StopLoss_Point=' + str(StopLoss_Point))
             print('StopLoss_Point_Action=' + str(StopLoss_Point_bf))
@@ -131,7 +133,7 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
                     print("Stop Point Action is "+str(StopLoss_Point_bf))
                     #return ('StopLoss Action Update', StopLoss_Point_bf)
             # if StopLoss_Point > BuyRate and LastPrice <= StopLoss_Point2:
-            if LastPrice <= StopLoss_Point_bf:
+            if LastPrice < StopLoss_Point_bf:
                 print("Sale coin because last price less than stop point => "+str(StopLoss_Point_bf)+"")
                 return ('StopLoss', LastPrice,StopLoss)
     elif LastPrice == BuyRate:
@@ -147,14 +149,6 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
 
 ## Order Buy ## Find good price and sale ,buy and find price up
 def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
-    #global number_point
-    #BuyRate = Get_BittrexOrder_buy(UUID, Exchange, 'order_buy', 'Rate')
-    #StopLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Stoploss')
-    #StopLoss=int(StopLoss)
-
-
-    #CutLoss = Get_BittrexDB(UUID, Exchange, 'ckloss', 'Cutloss')
-    #CutLoss=int(CutLoss)
     StopLoss_Point_bf=0
     StopLoss_Point=0
     StopLoss = Get_BittrexDB(UUID,Exchange, 'ckloss', 'Stoploss')
@@ -193,6 +187,9 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
                     if StopLoss_Point_bf < int(StopPoint):
                         StopLoss_Point=int(StopPoint)
                         break
+                    else:
+                        StopLoss_Point = LastPrice
+
             print('StopLoss_Point=' + str(StopLoss_Point))
             print('StopLoss_Point_Action=' + str(StopLoss_Point_bf))
             if LastPrice > StopLoss_Point_bf:  ## Price Up
@@ -215,18 +212,13 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
                     print("Stop Point Action is "+str(StopLoss_Point_bf))
                     #return ('StopLoss Action Update', StopLoss_Point_bf)
             # if StopLoss_Point > BuyRate and LastPrice <= StopLoss_Point2:
-            if LastPrice <= StopLoss_Point_bf:
+            if LastPrice < StopLoss_Point_bf:
                 print("Sale coin because last price less than stop point => "+str(StopLoss_Point_bf)+"")
                 return ('StopLoss', LastPrice,StopLoss)
     elif LastPrice == BuyRate:
         Update_Stoppoint(UUID, Exchange, '0')
         if HaveCustom == False:
             StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))
-        #if HaveCustom == True:
-        #    for StopPoint in StopLoss:
-        #        if int(StopLoss_Point_bf) < int(StopPoint):
-        #            StopLoss_Point = int(StopPoint)
-        #            break
     elif LastPrice < BuyRate:
         if BuyRate != "failed":
             CutLossPrice = (BuyRate - (BuyRate * (CutLoss / 100)))
@@ -236,8 +228,17 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
 
 ## Find price deep dows ## Find price low and Buy
 def buy_StopBuy_shadow(UUID, Exchange, LastPrice,StartRate):
-    StopRisk = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopRisk')
+    print("UUID="+str(UUID))
     StopBuy = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopBuy')
+    StopBuy=(list(StopBuy.split(",")))
+    print("Debug StopBuy"+str(StopBuy))
+    if len(StopBuy) > 1:
+        print("Using Custom Mode !!")
+        HaveCustom = True
+    else:
+        HaveCustom = False
+        StopBuy = int(StopBuy[0])
+    StopRisk = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopRisk')
     print("--------------------------")
     print('Start Bot StopBuy STB ..')
     print('1.StartRate=>' + str(StartRate))
@@ -254,10 +255,18 @@ def buy_StopBuy_shadow(UUID, Exchange, LastPrice,StartRate):
             StopBuy_Point_bf = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopBuyPoint') ## Stop loss before
             if StopBuy_Point_bf == 0:
                StopBuy_Point_bf = 1000000
+            if HaveCustom == False:
+                StopBuy_Point = LastPrice - (LastPrice * (StopBuy / 100))  ## current cutloss
+                print('StopBuy_Point=' + str(StopBuy_Point))
+                print('StopBuy_Point_Action=' + str(StopBuy_Point_bf))
+            if HaveCustom == True:
+                for StopPoint in StopBuy:
+                    if StopBuy_Point_bf > int(StopPoint):
+                        StopBuy_Point = int(StopPoint)
+                        break
+                    else:
+                        StopBuy_Point = LastPrice
 
-            StopBuy_Point = LastPrice + (LastPrice * (StopBuy / 100))  ## current cutloss
-            print('StopBuy_Point=' + str(StopBuy_Point))
-            print('StopBuy_Point_Action=' + str(StopBuy_Point_bf))
             if LastPrice < StopBuy_Point_bf:  ## Price is Down
                 #print('StopLoss_Point2=' + str(StopLoss_Point_bf))
                 if StopBuy_Point >= StartRate:
@@ -278,18 +287,19 @@ def buy_StopBuy_shadow(UUID, Exchange, LastPrice,StartRate):
                     print("StopBuy Point Action is "+str(StopBuy_Point_bf))
                     #return ('StopLoss Action Update', StopLoss_Point_bf)
             # if StopLoss_Point > BuyRate and LastPrice <= StopLoss_Point2:
-            if LastPrice >= StopBuy_Point_bf:
+            if LastPrice > StopBuy_Point_bf:
                 print("Buy coin because last price up than Stop Buy Point => "+str(StopBuy_Point_bf)+"")
                 return ('StopBuy', LastPrice,StopBuy)  ### Stop and Buy coin Now !!!
     elif LastPrice == StartRate:
         Update_StopBuyPoint(UUID, Exchange, '0')
-        CutLoss_Point = LastPrice - (LastPrice * (StopBuy / 100))
+        if HaveCustom == False:
+            StopBuy_Point = LastPrice - (LastPrice * (StopBuy / 100))
     elif LastPrice > StartRate:
         if StartRate != "failed":
-            StopLossPrice = (StartRate + (StartRate * (StopRisk / 100)))
-            print('StopRisk Price =>' + str(StopLossPrice))
-        if StopLossPrice <= LastPrice:
-            return ('StopRisk', StopLossPrice,StopRisk)   ### StopRisk becuase price is up
+            StopRiskPrice = (StartRate + (StartRate * (StopRisk / 100)))
+            print('StopRisk Price =>' + str(StopRiskPrice))
+        if StopRiskPrice <= LastPrice:
+            return ('StopRisk', StopRiskPrice,StopRisk)   ### StopRisk becuase price is up
 
 
 
@@ -524,16 +534,16 @@ def get_balance_bx(id, coin):
         else:
             return 201
     except ccxt.DDoSProtection as e:
-        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        #print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
         return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
-        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        #print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
         return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
-        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        #print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
         return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
-        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        #print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
         return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
         return (str(e) + 'Exchange Error')
@@ -621,16 +631,16 @@ def sale_coin(id, symbol,volumn, price):
             # return 1
 
     except ccxt.DDoSProtection as e:
-        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        #print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
         return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
-        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        #print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
         return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
-        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        #print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
         return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
-        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        #print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
         return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
         return (str(e) + 'Exchange Error')
@@ -679,16 +689,16 @@ def buy_coin_bss(id, symbol, volumn, price):
 
 
     except ccxt.DDoSProtection as e:
-        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        #print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
         return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
-        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        #print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
         return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
-        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        #print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
         return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
-        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        #print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
         return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
         return (str(e) + 'Exchange Error')
@@ -783,8 +793,6 @@ def buy_coin(id, symbol, volumn, price):
         else:
             return (str("Buy " + symbol + " Failed error is" + Result['info']['error']))
             # return 1
-
-
     except ccxt.DDoSProtection as e:
         print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
         return (str(e) + 'DDoS Protection (ignoring)')
@@ -873,16 +881,16 @@ def get_coin_information(id, symbol,line):
         return INFO
 
     except ccxt.DDoSProtection as e:
-        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        #print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
         return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
-        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        #print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
         return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
-        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        #print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
         return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
-        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        #print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
         return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
         return (str(e) + 'Exchange Error')
@@ -936,16 +944,16 @@ def good_coin_ck(id,exc,base_market):
         #aks=(info['info']['orderbook']['asks']['volume'])
 
     except ccxt.DDoSProtection as e:
-        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+       # print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
         return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
-        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+       # print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
         return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
-        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+       # print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
         return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
-        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+       # print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
         return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
         return (str(e) + 'Exchange Error')
@@ -971,16 +979,16 @@ def get_coin_lastorder(id, symbol,type):
                     break
 
     except ccxt.DDoSProtection as e:
-        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        #print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
         return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
-        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        #print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
         return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
-        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        #print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
         return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
-        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        #print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
         return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
         return (str(e) + 'Exchange Error')
@@ -1020,19 +1028,19 @@ def check_coin_list(id, symbol,rate,volumn,type):
 
 
     except ccxt.DDoSProtection as e:
-        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
-        return (str(e) + 'DDoS Protection (ignoring)')
+        #print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        return (False,str(e)+'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
-        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
-        return (str(e) + 'Request Timeout (ignoring)')
+        #print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        return (False,str(e)+'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
-        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
-        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        #print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        return (False,str(e)+'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
-        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
-        return (str(e) + 'Authentication Error (missing API keys, ignoring)')
+        #print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        return (False,str(e)+'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
-        return (str(e) + 'Exchange Error')
+        return (False,str(e)+'Exchange Error')
 
 
 def check_coin_list_sim(Coin,rate_ck,volumn_ck,type,exchange):
@@ -1119,22 +1127,23 @@ def get_lastprice_sim(symbol,exchange):
 def get_lastprice(id, symbol):
     try:
         Price = (id.fetch_ticker(symbol))
+       # print(str(Price))
         return (Price['last'])
 
     except ccxt.DDoSProtection as e:
-        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        #print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
         return (str(e)+'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
-        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        #print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
         return (str(e)+'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
-        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        #print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
         return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
-        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        #print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
         return (str(e)+'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
-        print(type(e).__name__, e.args,'Exchange Error' )
+        #print(type(e).__name__, e.args,'Exchange Error' )
         return (str(e)+'Exchange Error')
 
 
@@ -1171,16 +1180,16 @@ def get_lastcoin(id,exc):
             return sorted(COINLIST, key=itemgetter(2), reverse=True)
 
     except ccxt.DDoSProtection as e:
-        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        #print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
         return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
-        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        #print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
         return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
-        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        #print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
         return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
-        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        #print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
         return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
         return (str(e) + 'Exchange Error')
@@ -1356,16 +1365,16 @@ def sync_balance_coin(id,Exchange,Coin,ChatID):
         return INFO
 
     except ccxt.DDoSProtection as e:
-        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        #print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
         return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
-        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        #print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
         return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
-        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        #print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
         return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
-        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        #print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
         return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
         return (str(e) + 'Exchange Error')
@@ -1407,16 +1416,16 @@ def sync_balance_all(id,Exchange,ChatID):
                     return "Sync Update database --> Failed"
 
     except ccxt.DDoSProtection as e:
-        print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+        #print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
         return (str(e) + 'DDoS Protection (ignoring)')
     except ccxt.RequestTimeout as e:
-        print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+        #print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
         return (str(e) + 'Request Timeout (ignoring)')
     except ccxt.ExchangeNotAvailable as e:
-        print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        #print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
         return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
     except ccxt.AuthenticationError as e:
-        print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+        #print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
         return (str(e) + 'Authentication Error (missing API keys, ignoring)')
     except ccxt.ExchangeError as e:
         return (str(e) + 'Exchange Error')
@@ -1431,16 +1440,17 @@ def main():
         'secret': '69e49ad534c5',
         "enableRateLimit": True,
     })
+   # print(get_lastprice(bxin,'BTC/THB'))
     #info = bxin.fetch_ticker('DASH/THB')
     #print("bids"+str(info['info']['orderbook']['bids']['volume']))
     #print("asks"+str(info['info']['orderbook']['asks']['volume']))
     #print(symbols('bxinth','THB'))
     #CK=(good_coin_ck(bxin,'bxinth','THB'))
-    CK=get_lastcoin(bxin,'bxinth')
+    #CK=get_lastcoin(bxin,'bxinth')
     #sorted(CK, key=itemgetter(1), reverse=True)
     #print(str(CK))
-    for i in CK:
-        print(str(i[0])+"|"+str(i[1])+"|"+str(i[2]))
+   # for i in CK:
+   #     print(str(i[0])+"|"+str(i[1])+"|"+str(i[2]))
 
     #print(bxin.
    # ChatID=259669700
@@ -1463,7 +1473,7 @@ def main():
     #vl=5.2
     #vl=vl-(vl*0.0025)
     #price=19
-    print(Get_OrderSale('bxinth','trading'))
+    #print(Get_OrderSale('bxinth','trading'))
     #OID=sale_coin(bxin,'LTC/THB',float(format_floatc(vl,4)),float(format_floatc(price,4)))
     #print(OID)
     #INFO=get_coin_information(bxin,'POW/THB',100)
