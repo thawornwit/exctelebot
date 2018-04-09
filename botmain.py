@@ -27,9 +27,9 @@ import time
 import threading  ## for management threading
 import random
 import telepot  ## for interact with telegram
-from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardHide, ForceReply
-from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
-from telepot.namedtuple import InlineQueryResultArticle, InlineQueryResultPhoto, InputTextMessageContent
+#from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardHide, ForceReply
+#from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
+#from telepot.namedtuple import InlineQueryResultArticle, InlineQueryResultPhoto, InputTextMessageContent
 #######Import Mail #######
 import smtplib
 import re
@@ -135,7 +135,7 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
             # if StopLoss_Point > BuyRate and LastPrice <= StopLoss_Point2:
             if LastPrice < StopLoss_Point_bf:
                 print("Sale coin because last price less than stop point => "+str(StopLoss_Point_bf)+"")
-                return ('StopLoss', LastPrice,StopLoss)
+                return ('StopLoss',LastPrice,StopLoss)
     elif LastPrice == BuyRate:
         Update_Stoppoint(UUID, Exchange, '0')
         if HaveCustom == False:
