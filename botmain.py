@@ -133,7 +133,7 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
                     print("Stop Point Action is "+str(StopLoss_Point_bf))
                     #return ('StopLoss Action Update', StopLoss_Point_bf)
             # if StopLoss_Point > BuyRate and LastPrice <= StopLoss_Point2:
-            if LastPrice < StopLoss_Point_bf:
+            elif LastPrice < StopLoss_Point_bf:
                 print("Sale coin because last price less than stop point => "+str(StopLoss_Point_bf)+"")
                 return ('StopLoss',LastPrice,StopLoss)
     elif LastPrice == BuyRate:
@@ -212,7 +212,7 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
                     print("Stop Point Action is "+str(StopLoss_Point_bf))
                     #return ('StopLoss Action Update', StopLoss_Point_bf)
             # if StopLoss_Point > BuyRate and LastPrice <= StopLoss_Point2:
-            if LastPrice < StopLoss_Point_bf:
+            elif LastPrice < StopLoss_Point_bf:
                 print("Sale coin because last price less than stop point => "+str(StopLoss_Point_bf)+"")
                 return ('StopLoss', LastPrice,StopLoss)
     elif LastPrice == BuyRate:
@@ -256,14 +256,14 @@ def buy_StopBuy_shadow(UUID, Exchange, LastPrice,StartRate):
             if StopBuy_Point_bf == 0:
                StopBuy_Point_bf = 1000000
             if HaveCustom == False:
-                StopBuy_Point = LastPrice - (LastPrice * (StopBuy / 100))  ## current cutloss
+                StopBuy_Point = LastPrice + (LastPrice * (StopBuy / 100))  ## current cutloss
                 print('StopBuy_Point=' + str(StopBuy_Point))
                 print('StopBuy_Point_Action=' + str(StopBuy_Point_bf))
             if HaveCustom == True:
                 for StopPoint in StopBuy:
                     if StopBuy_Point_bf > int(StopPoint):
                         StopBuy_Point = int(StopPoint)
-                        break
+                        continue
                     else:
                         StopBuy_Point = LastPrice
 
@@ -287,9 +287,9 @@ def buy_StopBuy_shadow(UUID, Exchange, LastPrice,StartRate):
                     print("StopBuy Point Action is "+str(StopBuy_Point_bf))
                     #return ('StopLoss Action Update', StopLoss_Point_bf)
             # if StopLoss_Point > BuyRate and LastPrice <= StopLoss_Point2:
-            if LastPrice > StopBuy_Point_bf:
-                print("Buy coin because last price up than Stop Buy Point => "+str(StopBuy_Point_bf)+"")
-                return ('StopBuy', LastPrice,StopBuy)  ### Stop and Buy coin Now !!!
+            elif LastPrice > StopBuy_Point_bf:
+                print("Buy coin because last price up than StopBuy Point => "+str(StopBuy_Point_bf)+"")
+                return ('StopBuy',LastPrice,StopBuy)  ### Stop and Buy coin Now !!!
     elif LastPrice == StartRate:
         Update_StopBuyPoint(UUID, Exchange, '0')
         if HaveCustom == False:

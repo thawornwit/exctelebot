@@ -84,7 +84,7 @@ menubuypercent = {'keyboard': [['BACK'], ['10%', '20%','25%'], ['40%', '45%','50
 menusellpercent = {'keyboard': [['BACK'], ['10%', '20%','25%'], ['40%', '45%','50%'],['60%', '75%','100%']],'resize_keyboard': True}
 cutstoppercent={'keyboard': [['BACK'], ['2%', '4%','6%'], ['8%', '10%','12%'],['14%', '16%','18%']],'resize_keyboard': True}
 mainmenu = {'keyboard': [['BUY', 'SELL', 'COIN'], ['BUY ORDER', 'SELL ORDER', 'CAN ORDER'], ['COIN RAITO', 'BALANCE','INFO'],
-             ['NOTIFY','TASK ORDER', 'CANCEL'], ['ORDER WAIT','IDEAS','CHART'],['STRATEGY']],'resize_keyboard': True}
+             ['NOTIFY','TASK ORDER', 'CANCEL'], ['ORDER WAIT','IDEAS','CHART'],['INDICATOR','STRATEGY']],'resize_keyboard': True}
 mainmenust = {'keyboard': [['BUY', 'SELL', 'INFO'], ['BUY ORDER', 'SELL ORDER', 'CAN ORDER'], ['CANCEL', 'STRATEGY'],
                            ['NEW','CLOSE', 'UPDATE']],'resize_keyboard': True}
 selectst = {'keyboard': [['BUY', 'SELL', 'INFO'], ['BUY ORDER', 'SELL ORDER', 'CAN ORDER'], ['CANCEL', 'STRATEGY'],
@@ -317,9 +317,9 @@ class YourBot(telepot.Bot):
     def coin_buysalcanselect(self, chat_id, bxin, msg, Coin):
         bot.sendChatAction(chat_id, 'typing')
         global CKBALANCE
-        global Pause
+        #global Pause
         if msg == "BACK":
-            Pause = "NO"
+            #Pause = "NO"
             self.clear_state()
             self.clear_strategy
             self.coinmenu(chat_id)
@@ -425,8 +425,8 @@ class YourBot(telepot.Bot):
                 bot.sendMessage(chat_id, "How Many coin for sell ?",reply_markup=menusellpercent)
 
     def coinbx(self, chat_id):
-        global Pause
-        Pause = "YES"
+       # global Pause
+        #Pause = "YES"
         bot.sendMessage(chat_id, "[ SELECT COIN ] \
             \n/BTC \
             \n/DASH \
@@ -442,8 +442,8 @@ class YourBot(telepot.Bot):
             \n/ETH ", reply_markup=menucoinmarkup)
 
     def coinmenu(self, chat_id):
-        global Pause
-        Pause = "NO"
+        #global Pause
+        #Pause = "NO"
         BX.clear()
         CKCOMMAND.clear()
         ORDERBUY.clear()
@@ -475,9 +475,9 @@ class YourBot(telepot.Bot):
 
     def exchangemenu(self, chat_id, msg):
         bot.sendChatAction(chat_id, 'typing')
-        global Pause
+       # global Pause
         ### Clear Status ###
-        Pause="YES"
+       # Pause="YES"
         BX.clear()
         CKCOMMAND.clear()
         ORDERBUY.clear()
@@ -661,7 +661,7 @@ class YourBot(telepot.Bot):
 
             if msg['text'] == '/cancel' or msg['text'] == "CANCEL":
                 bot.sendChatAction(chat_id, 'typing')
-                Pause = "NO"
+               # Pause = "NO"
                 self.clear_state()
                 self.clear_strategy()
                 bot.sendMessage(chat_id, "\U00002714 Cancel all action-> OK ")
@@ -733,15 +733,15 @@ class YourBot(telepot.Bot):
 
             #### SHOW TASK ###
             if msg['text'] == "TASK ORDER" or msg['text'] == "/taskorder":
-                Pause = "YES"
+               # Pause = "YES"
                 #bot.sendMessage(chat_id, "[ STRATEGY TASK ]")
                 self.taskorder('bxinth', chat_id)
             if msg['text'] == "ORDER WAIT" or msg['text'] == "/orderwait":
                 #bot.sendMessage(chat_id, "|= WAIT T =|")
-                Pause="YES"
+                #Pause="YES"
                 ST=self.check_trading_wait('bxinth',chat_id)
             if msg['text'] == "/balance" or msg['text'] == "BALANCE":
-                Pause = "YES"
+               # Pause = "YES"
                 sync_balance_all(bxin, 'bxinth', str(chat_id))
                 self.coinbx(chat_id)
                 CKBALANCE.clear()
@@ -903,7 +903,7 @@ class YourBot(telepot.Bot):
             if ACT == "UPDATE" and noti_bss == "ON" and 'bls_stopbuy' in NOTISTATE_ACTION and ACT == "UPDATE" \
                     or ACT == "/UPDATE" and noti_bss == "ON" and 'bls_stopbuy' in NOTISTATE_ACTION and ACT == "/UPDATE":
                 UPDATE_ACT.append("UpdateAct")
-                Pause = "YES"
+               # Pause = "YES"
                 bot.sendMessage(chat_id, "Enter new StopBuy Point:")
                 NOTISTATE_ACTION.append('StopBuy_Update')
                 allow_close_sts = "NO"
@@ -926,7 +926,7 @@ class YourBot(telepot.Bot):
                 bot.sendMessage(chat_id, "Enter new StopBuy Point:")
                 NOTISTATE_ACTION.append('StopBuy_Update')
                 UPDATE_ACT.append("UpdateAct")
-                Pause = "YES"
+               # Pause = "YES"
                 allow_close_sts = "NO"
                 allow_close_bts = "NO"
                 # ------------------#
@@ -947,7 +947,7 @@ class YourBot(telepot.Bot):
                 bot.sendMessage(chat_id, "Enter new StopBuy Point:")
                 NOTISTATE_ACTION.append('StopBuy_Update')
                 UPDATE_ACT.append("UpdateAct")
-                Pause = "YES"
+              #  Pause = "YES"
                 allow_close_sts = "NO"
                 allow_close_bts = "NO"
                 # ------------------#
@@ -1032,7 +1032,7 @@ class YourBot(telepot.Bot):
                 UPDATE_ACT.append("UpdateAct")
                 bot.sendMessage(chat_id, "Enter new Stop Point:")
                 NOTISTATE_ACTION.append('StopPoint_Update')
-                Pause = "YES"
+               ## Pause = "YES"
                 allow_close_sts = "NO"
                 allow_close_bts = "NO"
                 # ------------------#
@@ -1053,7 +1053,7 @@ class YourBot(telepot.Bot):
                 bot.sendMessage(chat_id, "Enter new Stop Point:")
                 NOTISTATE_ACTION.append('StopPoint_Update')
                 UPDATE_ACT.append("UpdateAct")
-                Pause = "YES"
+                #Pause = "YES"
                 allow_close_sts = "NO"
                 allow_close_bts = "NO"
                 # ------------------#
@@ -1072,7 +1072,7 @@ class YourBot(telepot.Bot):
             elif ACT == "UPDATE" and noti_bts == "ON" and 'bts_update' in NOTISTATE_ACTION \
                     or ACT == "/UPDATE" and noti_bts == "ON" and 'bts_update' in NOTISTATE_ACTION:
                 UPDATE_ACT.append("UpdateAct")
-                Pause = "YES"
+               # Pause = "YES"
                 bot.sendMessage(chat_id, "Enter new Stop Point:")
                 NOTISTATE_ACTION.append('StopPoint_Update')
                 allow_close_sts = "NO"
@@ -1095,7 +1095,7 @@ class YourBot(telepot.Bot):
                     or ACT == "/UPDATE" and noti_sts == "ON" and 'cts_cutloss' in NOTISTATE_ACTION:
                 bot.sendMessage(chat_id, "Enter new Stop Point:")
                 NOTISTATE_ACTION.append('StopPoint_Update')
-                Pause = "YES"
+             #   Pause = "YES"
                 UPDATE_ACT.append("UpdateAct")
                 allow_close_sts = "NO"
                 allow_close_bts = "NO"
@@ -1116,7 +1116,7 @@ class YourBot(telepot.Bot):
                     or ACT == "/UPDATE" and noti_sts == "ON" and 'cts_stoploss' in NOTISTATE_ACTION:
                 bot.sendMessage(chat_id, "Enter new Stop Point:")
                 NOTISTATE_ACTION.append('StopPoint_Update')
-                Pause = "YES"
+               # Pause = "YES"
                 UPDATE_ACT.append("UpdateAct")
                 allow_close_sts = "NO"
                 allow_close_bts = "NO"
@@ -1136,7 +1136,7 @@ class YourBot(telepot.Bot):
             elif ACT == "UPDATE" and noti_sts == "ON" and 'cts_update' in NOTISTATE_ACTION \
                     or ACT == "/UPDATE" and noti_sts == "ON" and 'cts_update' in NOTISTATE_ACTION:
                 UPDATE_ACT.append("UpdateAct")
-                Pause = "YES"
+               # Pause = "YES"
                 bot.sendMessage(chat_id, "Enter new Stop Point:")
                 NOTISTATE_ACTION.append('StopPoint_Update')
                 allow_close_sts = "NO"
@@ -1226,7 +1226,7 @@ class YourBot(telepot.Bot):
             if ACT == "CLOSE" and noti_bss == "ON" and 'bls_stopbuy' in NOTISTATE_ACTION \
                 or ACT == "/CLOSE" and noti_bss == "ON" and 'bls_stopbuy' in NOTISTATE_ACTION:
                 #bot.sendMessage(chat_id, "Enter OrderID:", reply_markup=mainmenu)
-                Pause = "YES"
+               # Pause = "YES"
                 NOTISTATE_ACTION.pop()
                 bot.sendMessage(chat_id, "Do you want to Close Order " + str(ORDER) + " or not ?,\n[/YES]||[/NO]")
                 NOTISTATE_ACTION.append("CloseOrder")
@@ -1434,7 +1434,7 @@ class YourBot(telepot.Bot):
 
             ### SELL ORDER ####
             if msg['text'] == 'SELL ORDER' or msg['text'] == 'BUY ORDER':
-                Pause = "YES"
+               # Pause = "YES"
                 if msg['text'] == 'SELL ORDER':
                     bot.sendMessage(chat_id, 'Using for Sell Coin Directly,For Support BTS,CTS order !!!',
                                 reply_markup=cancelmarkup)
@@ -1546,7 +1546,7 @@ class YourBot(telepot.Bot):
                 market = "THB"
                 bot.sendMessage(chat_id, str(get_coin_information(bxin, coin + "/" + market, 3)))
                 ### Pause action notify
-                Pause = "YES"
+                #Pause = "YES"
 
 
 
@@ -1556,7 +1556,7 @@ class YourBot(telepot.Bot):
                     or msg['text'] == '/salecoin' or msg['text'] == '/cancelcoin' \
                     or msg['text'] == 'BUY' or msg['text'] == 'SELL' \
                     or msg['text'] == 'CAN ORDER' or msg['text'] == 'INFO':
-                Pause = "YES"
+               # Pause = "YES"
                 self.exchangemenu(chat_id,msg['text'])
 
             if 'bxinth' in BX or 'Cancel' in BX:
@@ -3390,8 +3390,8 @@ class YourBot(telepot.Bot):
                              \nVolumn:" + str(format_floatc(float(volumn_coin),4)), reply_markup=mainmenu)
                             ##############
                     CK1 = Update_OrderStopBuy(order_id, exchange, 'trading')
-                    #CK2 = Update_OrderStopBuy_Rate(order_id, exchange,lastprice)
-                    if CK1 == "OK":
+                    CK2 = Update_OrderStopBuy_Rate(order_id, exchange,lastprice)
+                    if CK1 == "OK" and CK2 == "OK":
                         bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Trading Bought in progress =>"+CK1)
                     else:
                         bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Trading Bought in progress =>"+CK1)
@@ -4138,6 +4138,7 @@ class YourBot(telepot.Bot):
                             print("!!! Update StopBuy Point at " + str(StopBuy_Point))
                             volumn_st = format_floatc((qty / StopBuy_Point),4)
                             volumn_ls = format_floatc((qty / lastprice),4)
+                            #LastPrice - (LastPrice * (StopBuy / 100))
                             NOTIBSS_INFO += ("\n"+emoji.emojize(':rocket:')+"UpdateStopPoint(BLS)" + coin +" "\
                                              "\nOrder:/" + str(order_id) + \
                                              "\nBuy:" +str(float(qty)) + \
@@ -4199,15 +4200,15 @@ class YourBot(telepot.Bot):
                                      \nBuy " + str(float(qty)) + "\
                                      \nVolumn " + str(volumn_st) + "\
                                      \nAccept this Action or not?")
-                            if Pause == "NO":
-                                self.buysellaction(chat_id, NOTIBSS_INFO,order_id,'buy')
+                           # if Pause == "NO":
+                            self.buysellaction(chat_id, NOTIBSS_INFO,order_id,'buy')
                                 #bot.sendMessage(chat_id, NOTIBSS_INFO)
-                                COUNT += 1
-                                NOTIBSS_INFO = ""
-                                time.sleep(10)
-                                print("Buy StopBuy at " + str(StopBuy_Price) + " !!!")
-                            else:
-                                NOTIBSS_INFO=""
+                            COUNT += 1
+                            NOTIBSS_INFO = ""
+                            time.sleep(10)
+                            print("Buy StopBuy at " + str(StopBuy_Price) + " !!!")
+                           # else:
+                           #     NOTIBSS_INFO=""
                         if is_number(ST) == True and allow_stopbuy_bss == "YES" and order_id == ORDER:
                             noti_bss = "ON"
                             CK1 = Update_OrderStopBuy(order_id, exchange, 'trading')
@@ -4582,15 +4583,15 @@ class YourBot(telepot.Bot):
                                      \nProfit " + str(format_floatc(profit_fee, 2)) + "\
                                      \nAccept this Action or not?")
                             time.sleep(1)
-                            if Pause == "NO":
+                            #if Pause == "NO":
                                 #bot.sendMessage(chat_id, NOTIBTS_INFO)
-                                self.buysellaction(chat_id, NOTIBTS_INFO, order_id,'sell')
-                                COUNT += 1
-                                NOTIBTS_INFO = ""
-                                time.sleep(10)
-                                print("Sale Cut loss at " + str(CutLossPrice) + " !!!")
-                            else:
-                                NOTIBTS_INFO=""
+                            self.buysellaction(chat_id, NOTIBTS_INFO, order_id,'sell')
+                            COUNT += 1
+                            NOTIBTS_INFO = ""
+                            time.sleep(10)
+                            print("Sale Cut loss at " + str(CutLossPrice) + " !!!")
+                           # else:
+                           #     NOTIBTS_INFO=""
                         if is_number(ST) == True and allow_cutloss_bts == "YES" and order_id == ORDER:
                             noti_bts = "ON"
                             #allow_cutloss = "NO"
@@ -4684,17 +4685,17 @@ class YourBot(telepot.Bot):
                             \nChange Fee " + str(fee) + "\
                             \nProfit " + str(format_floatc(profit_fee, 2)) + "Bath \
                             \nAccept this Action or not?")
-                            if Pause == "NO":
+                           # if Pause == "NO":
                                # bot.sendMessage(chat_id, NOTIBTS_INFO)
-                                self.buysellaction(chat_id, NOTIBTS_INFO, order_id,'sell')
-                                COUNT += 1
-                                NOTIBTS_INFO = ""
-                                print("Sale Stop loss at " + str(LastPrice) + " !!!")
-                                print("Change fee" + str(fee))
-                                print('Profit is ' + str(profit_fee))
-                                time.sleep(10)
-                            else:
-                                NOTIBTS_INFO=""
+                            self.buysellaction(chat_id, NOTIBTS_INFO, order_id,'sell')
+                            COUNT += 1
+                            NOTIBTS_INFO = ""
+                            print("Sale Stop loss at " + str(LastPrice) + " !!!")
+                            print("Change fee" + str(fee))
+                            print('Profit is ' + str(profit_fee))
+                            time.sleep(10)
+                           # else:
+                           #     NOTIBTS_INFO=""
                         if is_number(ST) == True and allow_stoploss_bts == "YES" and order_id == ORDER:
                             noti_bts = "ON"
                             #allow_stoploss = "NO"
@@ -5057,15 +5058,15 @@ class YourBot(telepot.Bot):
                                              "\nFee:" + str(fee) + \
                                              "\nProfit:" + str(format_floatc(float(profit_fee), 2)) + " Bath\
                                              \nAccept this Action or not?")
-                            if Pause == "NO":
+                            # Pause == "NO":
                                 #bot.sendMessage(chat_id, NOTISTS_INFO)
-                                self.buysellaction(chat_id, NOTISTS_INFO, order_id,'sell')
-                                COUNT += 1
-                                NOTISTS_INFO = ""
-                                print("Sale Cut loss at " + str(CutLossPrice) + " !!!")
-                                time.sleep(10)
-                            else:
-                                NOTISTS_INFO = ""
+                            self.buysellaction(chat_id, NOTISTS_INFO, order_id,'sell')
+                            COUNT += 1
+                            NOTISTS_INFO = ""
+                            print("Sale Cut loss at " + str(CutLossPrice) + " !!!")
+                            time.sleep(10)
+                            #else:
+                            #    NOTISTS_INFO = ""
 
                         if is_number(ST) == True and allow_cutloss_sts == "YES" and order_id == ORDER:
                             noti_sts = "ON"
@@ -5167,17 +5168,17 @@ class YourBot(telepot.Bot):
                                              "\nChange Fee:" + str(fee) + \
                                              "\nProfit:" + str(format_floatc(profit_fee, 2)) + " Bath\
                                              \nAccept this Action or not?")
-                            if Pause == "NO":
+                            #if Pause == "NO":
                                # bot.sendMessage(chat_id, NOTISTS_INFO)
-                                self.buysellaction(chat_id, NOTISTS_INFO, order_id,'sell')
-                                NOTISTS_INFO = ""
-                                COUNT += 1
-                                print("Sale Stop loss at " + str(LastPrice) + " !!!")
-                                print("Change fee:" + str(fee))
-                                print('Profit:' + str(profit_fee))
-                                time.sleep(10)
-                            else:
-                                NOTISTS_INFO=""
+                            self.buysellaction(chat_id, NOTISTS_INFO, order_id,'sell')
+                            NOTISTS_INFO = ""
+                            COUNT += 1
+                            print("Sale Stop loss at " + str(LastPrice) + " !!!")
+                            print("Change fee:" + str(fee))
+                            print('Profit:' + str(profit_fee))
+                            time.sleep(10)
+                            #else:
+                            #    NOTISTS_INFO=""
                         if is_number(ST) == True and allow_stoploss_sts == "YES" and order_id == ORDER:
                             noti_sts = "ON"
                             #allow_stoploss = "NO"
@@ -5915,15 +5916,12 @@ class YourBot(telepot.Bot):
                 return False
 
             if float(lastprice) <= float(rate) and float(rate) >= float(last_rate[0]):
-                profit = (((lastprice / rate) * qty) - qty)
-                profit_fee = (profit - (profit * fee))
                 bot.sendMessage(chat_id, "[ Buy Coin(BLS) ]\
                          \nCoin:" + coin + "\
                          \nOrder:" + str(order_id) + "\
                          \nBuy:" + str(qty) + "\
-                         \nSold:" + str(format_float(((lastprice / rate) * qty))) + "\
                          \nChange Fee " + str(fee) + "\
-                         \nProfit " + str(format_float(profit_fee)) + "Bath", reply_markup=mainmenu)
+                         \nVolumn:" + str(format_floatc(float(volumn), 4))+"",reply_markup=mainmenu)
                 CK1 = Update_OrderStopBuy(order_id, exchange, 'bought')
                 CK2 = Update_OrderStopBuy_Rate(order_id, exchange, lastprice)
                 if CK1 == "OK" and CK2 == "OK":
