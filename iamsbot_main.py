@@ -2,6 +2,7 @@ __author__ = 'thawornwit'
 from tokens import *  ## for accessing telegram api
 from botmain import *
 import matplotlib  ## for ploting graph
+import multiprocessing as mp
 import asyncio
 import ccxt
 import emoji
@@ -13,6 +14,9 @@ from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 from telepot.namedtuple import InlineQueryResultArticle, InlineQueryResultPhoto, InputTextMessageContent
 import chart
 import tradingview
+import numpy as np
+import pylab
+import requests
 matplotlib.use("Agg")  # has to be before any other matplotlibs imports to set a "headless" backend
 import matplotlib.pyplot as plt  ## create object plt for ploting graph
 import psutil  ## for get utility system
@@ -51,7 +55,8 @@ Email = ""
 Text_mail = ""
 COUNT = 0
 
-##########BOT COIN#############
+##########BOT
+# #############
 BX = []
 BITTREX = []
 YOBIT = []
@@ -78,13 +83,14 @@ CKBALANCE = []
 CLOSECON=[]
 STOPPOINT=[]
 CKORDERWAIT=[]
+PROCESS_JOBS=[]
 menucoinmarkup = {'keyboard': [['BACK'], ['BTC', 'BCH','POW'], ['LTC', 'OMG', 'ETH'], ['EVX', 'DASH', 'XZC'], ['GNO', 'REP', 'XRP']],'resize_keyboard': True}
 menuexchange = {'keyboard': [['BACK'], ['BXINTH', 'TDAX'], ['BITTREX', 'YOBIT']],'resize_keyboard': True}
 menubuypercent = {'keyboard': [['BACK'], ['10%', '20%','25%'], ['40%', '45%','50%'],['60%', '75%','100%']],'resize_keyboard': True}
 menusellpercent = {'keyboard': [['BACK'], ['10%', '20%','25%'], ['40%', '45%','50%'],['60%', '75%','100%']],'resize_keyboard': True}
 cutstoppercent={'keyboard': [['BACK'], ['2%', '4%','6%'], ['8%', '10%','12%'],['14%', '16%','18%']],'resize_keyboard': True}
-mainmenu = {'keyboard': [['BUY', 'SELL', 'COIN'], ['BUY ORDER', 'SELL ORDER', 'CAN ORDER'], ['COIN RAITO', 'BALANCE','INFO'],
-             ['NOTIFY','TASK ORDER', 'CANCEL'], ['ORDER WAIT','IDEAS','CHART'],['INDICATOR','STRATEGY']],'resize_keyboard': True}
+mainmenu = {'keyboard': [['BUY', 'SELL', 'CKCOIN'], ['BUY ORDER', 'SELL ORDER', 'CAN ORDER'], ['COIN RSI', 'BALANCE','INFO'],
+             ['NOTIFY','TASK ORDER', 'CANCEL'], ['ORDER WAIT','CHART'],['STRATEGY']],'resize_keyboard': True}
 mainmenust = {'keyboard': [['BUY', 'SELL', 'INFO'], ['BUY ORDER', 'SELL ORDER', 'CAN ORDER'], ['CANCEL', 'STRATEGY'],
                            ['NEW','CLOSE', 'UPDATE']],'resize_keyboard': True}
 selectst = {'keyboard': [['BUY', 'SELL', 'INFO'], ['BUY ORDER', 'SELL ORDER', 'CAN ORDER'], ['CANCEL', 'STRATEGY'],
@@ -196,6 +202,8 @@ class YourBot(telepot.Bot):
         #        bot.editMessageText(msg_idf, 'NEW MESSAGE HERE!!!!!')
         #    else:
         #        bot.answerCallbackQuery(query_id, text='No previous message to edit')
+
+    ### INDICATOR ###
 
     def is_number(s):
         try:
@@ -504,16 +512,16 @@ class YourBot(telepot.Bot):
     def buysellaction(self,chat_id,info,order_id,type):
         if type == "sell":
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [dict(text="SELL", callback_data='sell,'+str(order_id)), dict(text="CLOSE", callback_data='close,'+str(order_id)),
-            dict(text="UPDATE", callback_data='update,'+str(order_id))]])
+            [dict(text="SELL", callback_data='sell,'+str(order_id)), \
+             dict(text="CLOSE", callback_data='close,'+str(order_id))]])
             # keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='OK', callback_data='yes'),InlineKeyboardButton(text='NO', callback_data='yes')]])
             #reply_markup_inline = InlineKeyboardMarkup(keyboard)
         elif type == "buy":
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
                 [dict(text="BUY", callback_data='buy,' + str(order_id)),
-                 dict(text="CLOSE", callback_data='close,' + str(order_id)),
-                 dict(text="UPDATE", callback_data='update,' + str(order_id))]])
+                 dict(text="CLOSE", callback_data='close,' + str(order_id))]])
         bot.sendMessage(chat_id,info, reply_markup=keyboard)
+
 
     def on_chat_message(self, msg):
         global Notification
@@ -667,29 +675,48 @@ class YourBot(telepot.Bot):
                 bot.sendMessage(chat_id, "\U00002714 Cancel all action-> OK ")
 
                 self.coinmenu(chat_id)
-            if msg['text'] == "COIN" or msg['text'] == "/coin":
+            if msg['text'] == "CKCOIN" or msg['text'] == "/ckcoin":
                 COUNT=0
                 bot.sendChatAction(chat_id, 'typing')
-                bot.sendMessage(chat_id,""+emoji.emojize(':hourglass:')+"Coin Under Processing ..")
-                INFO=""
-                INFO="[[- COIN LASTPRICE -]]\n"
-                CK = get_lastcoin(bxin, 'bxinth')
-                for c in CK:
-                    COUNT+=1
-                    INFO+=(str(COUNT)+")"+str(c[0]) + "|" + str(c[1]) + "|["+str(c[2])+"]\n")
-                bot.sendMessage(chat_id,INFO)
+                ckcoin = mp.Process(target=self.get_lastcoin, args=(bxin,'bxinth',chat_id))
+                # PROCESS_JOBS.append(rsi)
+                ckcoin.start()
+                bot.sendMessage(chat_id,""+emoji.emojize(':hourglass:')+"Under processing ..\
+                \n,You can take any action if you want\n")
 
-            if msg['text'] == "COIN RAITO" or msg['text'] == "/coinraito":
+
+            if msg['text'] == "COIN RSI" or msg['text'] == "/coinrsi":
                 bot.sendChatAction(chat_id, 'typing')
-                bot.sendMessage(chat_id, ""+emoji.emojize(':hourglass:')+"Raito Under Processing ..")
+                bot.sendMessage(chat_id, "Enter timeframe(Day):")
+                BX.append("RSI")
+
+                #INFO = "[- (%)COIN RSI -]\n"
+                #CK = (good_coin_ck(bxin, 'bxinth', 'THB'))
+                #COUNT = 0
+                #for buy_coin in CK:
+                #    COUNT += 1
+                #    INFO += (str(COUNT) + ")" + buy_coin[0] + " [" + str(buy_coin[1]) + "]["+str(buy_coin[2])+"]\n")
+            elif "RSI" in BX:
+                print("RSI Action")
+                global PROCESS_JOBS
                 INFO = ""
-                INFO = "[- (%)COIN TRADING -]\n"
-                CK = (good_coin_ck(bxin, 'bxinth', 'THB'))
-                COUNT = 0
-                for buy_coin in CK:
-                    COUNT += 1
-                    INFO += (str(COUNT) + ")" + buy_coin[0] + " [" + str(buy_coin[1]) + "]["+str(buy_coin[2])+"]\n")
-                bot.sendMessage(chat_id, INFO + "\n")
+                Day=msg['text']
+                if is_number(Day) == True:
+                    #bot.sendMessage(chat_id, "" + emoji.emojize(':hourglass:') + "RSI Under Processing ..")
+                    #pool=mp.Pool(processes=1)
+                    #rsi=pool.apply_async(rsi_coin,(str(Day)))
+                    rsi = mp.Process(target=self.rsi_coin,args=(str(Day),None,chat_id))
+                    #PROCESS_JOBS.append(rsi)
+                    rsi.start()
+                    bot.sendMessage(chat_id, "" + emoji.emojize(':hourglass:') + "RSI Calculate under Processing \nYou can take any action if you want")
+                    #rsi.join()
+                    #PROCESS_DATALIS.append(rsi.get())
+                    #print(INFO)
+                    #bot.sendMessage(chat_id,INFO,reply_markup=mainmenu)
+                    BX.clear()
+                else:
+                    bot.sendMessage(chat_id,"Enter number only\n,Enter timeframe(Day):")
+
 
             if msg['text'] == "CHART" or msg['text'] == "/chart":
                 bot.sendChatAction(chat_id, 'typing')
@@ -698,13 +725,11 @@ class YourBot(telepot.Bot):
                 BX.append("chart")
             elif "chart" in BX and msg['text'] != "":
                 coin=msg['text']
+                chartcoin=mp.Process(target=self.get_chart,args=(coin,chat_id))
+                chartcoin.start()
+                bot.sendMessage(chat_id,"Ok,Under processing ..")
                 #print("Coin =>"+coin)
-                try:
-                    chart.make_graph(coin,10,30)
-                    bot.sendPhoto(chat_id=chat_id, photo=open('./example.png', 'rb'),reply_markup=mainmenu)
-                    BX.clear()
-                except Exception as e:
-                    bot.sendMessage(chat_id,"Error parsing data. Invalid ticker or API timeout\n"+str(e))
+
 
             if msg['text'] == "IDEAS" or msg['text'] == "/ideas":
                 bot.sendChatAction(chat_id, 'typing')
@@ -733,13 +758,17 @@ class YourBot(telepot.Bot):
 
             #### SHOW TASK ###
             if msg['text'] == "TASK ORDER" or msg['text'] == "/taskorder":
-               # Pause = "YES"
-                #bot.sendMessage(chat_id, "[ STRATEGY TASK ]")
-                self.taskorder('bxinth', chat_id)
+                bot.sendChatAction(chat_id, 'typing')
+                bot.sendMessage(chat_id,"Ok,Task recheck ..")
+                task=mp.Process(target=self.taskorder,args=('bxinth', chat_id))
+                task.start()
             if msg['text'] == "ORDER WAIT" or msg['text'] == "/orderwait":
+                bot.sendChatAction(chat_id, 'typing')
                 #bot.sendMessage(chat_id, "|= WAIT T =|")
                 #Pause="YES"
-                ST=self.check_trading_wait('bxinth',chat_id)
+                bot.sendMessage(chat_id,"Ok,Recheck Order under processing ..")
+                orderwait=mp.Process(target=self.check_trading_wait,args=('bxinth',chat_id))
+                orderwait.start()
             if msg['text'] == "/balance" or msg['text'] == "BALANCE":
                # Pause = "YES"
                 sync_balance_all(bxin, 'bxinth', str(chat_id))
@@ -1544,7 +1573,9 @@ class YourBot(telepot.Bot):
                 if "/" in str(coin):
                     coin = str(coin).split("/")[1]
                 market = "THB"
-                bot.sendMessage(chat_id, str(get_coin_information(bxin, coin + "/" + market, 3)))
+                information=mp.Process(target=self.get_coin_information,args=(bxin,coin+"/"+market,3,chat_id))
+                information.start()
+                #bot.sendMessage(chat_id, str(get_coin_information(bxin, coin + "/" + market, 3)))
                 ### Pause action notify
                 #Pause = "YES"
 
@@ -6121,33 +6152,220 @@ class YourBot(telepot.Bot):
         if INFO_WAIT == "" and INFO_RES == "":
            bot.sendMessage(chat_id,"No order Wait !!")
 
+    def rsi_coin(self,t,coin=None,chat_id=None):
+        INFO = ""
+        RSI = []
+        # try:
+        print("RSI START !!")
+        exchange_found = "bxinth" in ccxt.exchanges
+        if exchange_found:
+            exchange = getattr(ccxt, "bxinth")({
+                # 'proxy':'https://cors-anywhere.herokuapp.com/',
+            })
+            # load all markets from the exchange
+            markets = exchange.load_markets()
+            tuples = list(ccxt.Exchange.keysort(markets).items())
+            # dump(pink('{:<9} {:<9} {:<9} {:<9}'.format('id', 'symbol', 'base', 'quote')))
+            INFO += "[ RSI TRADING " + str(t) + " DAY]\n"
+            if coin == None:
+                for (k, v) in tuples:
+                    if v['quote'] == str('THB'):
+                        if v['base'] != "":
+                            stock_data = get_price_history(v['base'], t)
+                            #print(str(stock_data))
+                            date, highp, lowp, openp, closep, volume = np.loadtxt(stock_data, \
+                                                                                  delimiter=' ', \
+                                                                                  unpack=True)
+                            print(str(closep))
+                            #print(rsiFunc(closep)[29])
+                            RSI.append((v['base'], format_floatc(rsiFunc(closep)[29], 2)))
+                            # RSI.append(str(format_floatc(rsiFunc(closep)[29],2)))
+                            # INFO+=(v['base']+ " RSI =>" +str(format_floatc(rsiFunc(closep)[29],2)+" % \n"))
+            else:
+                stock_data = get_price_history(coin, t)
+                #print(str(stock_data))
+                date, highp, lowp, openp, closep, volume = np.loadtxt(stock_data, \
+                                                                      delimiter=' ', \
+                                                                      unpack=True)
+                #print(str(closep))
+                RSI = format_floatc(rsiFunc(closep)[29], 2)
+
+            if INFO != "" and coin == None:
+                global DATALIST_PROCESS
+                RSI = sorted(RSI, key=itemgetter(1), reverse=True)
+                for report in RSI:
+                    INFO += (str(report[0]) + "=>" + str(report[1]) + "%\n")
+                #DATALIST_PROCESS.append(INFO)
+                bot.sendMessage(chat_id,INFO)
+                return
+            elif INFO == "" and coin == None:
+                bot.sendMessage(chat_id,"Can't calculate RSI !!")
+                return
+                #return
+                #datalist=data
+                #print("rsi data ->" + str(DATALIST_PROCESS))
+            else:
+                return (RSI)
+
+    def get_lastcoin(self,id,exc,chat_id):
+        try:
+            INFO=""
+            COUNT=0
+            print("Access to coin last")
+            COINLIST = []
+            exchange_found = exc in ccxt.exchanges
+            if exchange_found:
+                exchange = getattr(ccxt, exc)({
+                    # 'proxy':'https://cors-anywhere.herokuapp.com/',
+                })
+                markets = exchange.load_markets()
+                tuples = list(ccxt.Exchange.keysort(markets).items())
+                COINLIST.clear()
+                for (k, v) in tuples:
+                    if v['quote'] == "THB":
+                        info = (id.fetch_ticker(v['symbol']))
+                        ch = str(info['info']['change'])
+                        ls = str(format_floatc((info['info']['last_price']), 2))
+                        COINLIST.append((v['base'], format_floatc(float(ls), 2), float(ch)))
+                COINCK=sorted(COINLIST, key=itemgetter(2), reverse=True)
+                INFO = "[[- COIN LASTPRICE -]]\n"
+                for c in COINCK:
+                    COUNT += 1
+                    INFO += (str(COUNT) + ")" + str(c[0]) + "|" + str(c[1]) + "|[" + str(c[2]) + "]\n")
+                print("ckcoin =>"+INFO)
+                bot.sendMessage(chat_id, INFO)
+                #return sorted(COINLIST, key=itemgetter(2), reverse=True)
+
+        except ccxt.DDoSProtection as e:
+            # print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+            return (str(e) + 'DDoS Protection (ignoring)')
+        except ccxt.RequestTimeout as e:
+            # print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+            return (str(e) + 'Request Timeout (ignoring)')
+        except ccxt.ExchangeNotAvailable as e:
+            # print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+            return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        except ccxt.AuthenticationError as e:
+            # print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+            return (str(e) + 'Authentication Error (missing API keys, ignoring)')
+        except ccxt.ExchangeError as e:
+            return (str(e) + 'Exchange Error')
+
+    def get_chart(self,coin,chat_id):
+        try:
+            chart.make_graph(coin, 10, 30)
+            bot.sendMessage(chat_id, "[" + str(coin).upper() + "] CHART ")
+            bot.sendPhoto(chat_id=chat_id, photo=open('./example.png', 'rb'), reply_markup=mainmenu)
+            BX.clear()
+        except Exception as e:
+            bot.sendMessage(chat_id, "Error parsing data. Invalid ticker or API timeout\n" + str(e))
+
+    def get_coin_information(self,id, symbol, line,chat_id):
+        try:
+            INFO = "[COIN INFORMATION] \n"
+            info = (id.fetch_ticker(symbol))
+            print(info)
+            bid = (info['info']['orderbook']['bids']['volume'])
+            aks = (info['info']['orderbook']['asks']['volume'])
+
+            INFO += str("Coin:" + symbol + "\n")
+            INFO += str("Change:" + str(info['info']['change']) + " %\n")
+            INFO += str("[Buy/Sell]:" + str(format_floatc(((bid / aks) * 100), 2)) + " %\n")
+            # INFO +=str("RSI(14 Day):"+str(rsi_coin(14,str(symbol).split('/')[0]))+"%\n")
+            INFO += str("LastPrice:" + str(format_floatc((info['info']['last_price']), 4)) + "\n")
+            INFO += "|--------------------| \n"
+            ST = id.fetch_order_book(symbol)
+            #print(ST)
+            count = 0
+            INFO += ("[LAST BX ORDER]\n")
+            INFO += ("[ BIDS ][Vl:" + str(format_floatc(bid, 4)) + "]\n")
+            for data in ST['bids']:
+                count += 1
+                INFO += ("(" + str(count) + ")|" + str(format_floatc((data[0]), 4)) + "|" + str(
+                    format_floatc((data[1]), 4)) + "\n")
+                if count == line:
+                    break
+            count = 0
+            INFO += ("[ ASKS ][Vl:" + str(format_floatc(aks, 4)) + "]\n")
+            for data in ST['asks']:
+                count += 1
+                INFO += ("(" + str(count) + ")|" + str(format_floatc((data[0]), 4)) + "|" + str(
+                    format_floatc((data[1]), 4)) + "\n")
+                if count == line:
+                    break
+            INFO += "|--------------------| \n"
+
+            #print(INFO)
+            bot.sendMessage(chat_id,INFO)
+
+        except ccxt.DDoSProtection as e:
+            # print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+            return (str(e) + 'DDoS Protection (ignoring)')
+        except ccxt.RequestTimeout as e:
+            # print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+            return (str(e) + 'Request Timeout (ignoring)')
+        except ccxt.ExchangeNotAvailable as e:
+            # print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+            return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
+        except ccxt.AuthenticationError as e:
+            # print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+            return (str(e) + 'Authentication Error (missing API keys, ignoring)')
+        except ccxt.ExchangeError as e:
+            return (str(e) + 'Exchange Error')
+
+
 
 TOKEN = telegrambot
 bot = YourBot(TOKEN)
-#bot.message_loop()
 answerer = telepot.helper.Answerer(bot)
-MessageLoop(bot, {'chat': bot.on_chat_message,'callback_query':bot.on_callback_query}).run_as_thread()
-print('Listening ...')
+############
+#loop = asyncio.get_event_loop()
+#bot.message_loop()
 
+#loop.create_task(MessageLoop(bot, {'chat': bot.on_chat_message,'callback_query':bot.on_callback_query}).run_forever())
+#print('Listening ...')
+#loop.run_forever()
+################
+## Old version ##
+answerer = telepot.helper.Answerer(bot)
+MessageLoop(bot, {'chat': bot.on_chat_message,
+                  'callback_query': bot.on_callback_query}).run_as_thread()
+print('Listening ...')
+################
 
 #############MAIN PROGRAM ###########
-while True:
-    if STRATEGY_CHECK == "ON":
-        simtest = "yes"
-        for adminid in adminchatid:
-            print("ChatID:"+str(adminid))
-            bot.bls('bxinth', adminid)
-            ####################
-            bot.bts('bxinth', adminid)
-            ####################
-            bot.cts('bxinth', adminid)
-            ####################
-            bot.check_close_order('bxinth', adminid)
-            ###################
-            bot.check_close_openorder_trading('bxinth', adminid)
-            ###################
-            bot.check_close_strategy_trading('bxinth',adminid)
-    time.sleep(10)
+#global PROCESS_DATALIS
+if __name__ == '__main__':
+    while True:
+        if STRATEGY_CHECK == "ON":
+            simtest = "yes"
+            for adminid in adminchatid:
+                print("ChatID:"+str(adminid))
+                blsck = mp.Process(target=bot.bls, args=('bxinth', adminid))
+                blsck.start()
+                #bot.bls('bxinth', adminid)
+                ####################
+                btsck = mp.Process(target=bot.bts, args=('bxinth', adminid))
+                btsck.start()
+                #bot.bts('bxinth', adminid)
+                ####################
+                ctsck = mp.Process(target=bot.cts, args=('bxinth', adminid))
+                ctsck.start()
+                #bot.cts('bxinth', adminid)
+                ####################
+                ckclose = mp.Process(target=bot.check_close_order, args=('bxinth', adminid))
+                ckclose.start()
+                #bot.check_close_order('bxinth', adminid)
+                ###################
+                ckcloseopen = mp.Process(target=bot.check_close_openorder_trading, args=('bxinth', adminid))
+                ckcloseopen.start()
+                #bot.check_close_openorder_trading('bxinth', adminid)
+                ###################
+                ckclosestra = mp.Process(target=bot.check_close_strategy_trading, args=('bxinth', adminid))
+                ckclosestra.start()
+                #bot.check_close_strategy_trading('bxinth',adminid)
+        time.sleep(20)
+
 #    print("Admin ChatID "+str(adminid))
 #    ST = bot.bts('bxinth', adminid)
 #    if ST == False:

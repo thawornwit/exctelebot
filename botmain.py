@@ -3,9 +3,14 @@ from bittrex_tokens import *  ## for accessing telegram api
 import matplotlib  ## for ploting graph
 import os
 import sys
+import numpy as np
 from operator import itemgetter
+
+import datetime
 import time
+import requests
 from pprint import pprint
+import multiprocessing as mp
 
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(root + '/python')
@@ -50,6 +55,7 @@ number_point = 0
 StopLoss_Point2 = 0
 StopLoss_Point = 0
 TICK_INTERVAL = 5  # seconds
+DATALIST_PROCESS=[]
 # API_KEY = 'a7e650878ca94b428f2bb43547793aa7'
 # API_SECRET_KEY = b'bcfd8047a5f94d108714fc2d38092780'
 Enable = "OFF"
@@ -98,19 +104,65 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
         (100 * (LastPrice - BuyRate)) / BuyRate) + "%")
     print("--------------------------")
     ## Price UP ##
+    print("StopLoss =>"+str(StopLoss)+" Action =>"+str(HaveCustom))
     if LastPrice > BuyRate:
-        if StopLoss != "" or StopLoss != 0:
-            StopLoss_Point_bf = Get_BittrexDB(UUID, Exchange, 'ckloss', 'StoplossPoint') ## Stop loss before
-            if HaveCustom == False:
-                StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))  ## current stop loss
-            if HaveCustom == True:
-                for StopPoint in StopLoss:
-                    if StopLoss_Point_bf < int(StopPoint):
-                        StopLoss_Point = int(StopPoint)
-                        break
+        StopLoss_Point_bf = Get_BittrexDB(UUID, Exchange, 'ckloss', 'StoplossPoint')  ## Stop loss before
+        print("StopLossPoint BF=>" + str(StopLoss_Point_bf))
+        if StopLoss_Point_bf == 0:
+            CK = Update_Stoppoint(UUID, Exchange, LastPrice)
+            if CK == "OK":
+                print("Update StopPoint to LastPrice=>" + str(LastPrice))
+        if HaveCustom == True and StopLoss != "" or HaveCustom == True and StopLoss != 0:
+            # StopLoss_Point = LastPrice
+            for StopPoint in StopLoss:  ### Check StopPoint Update ###
+                if float(StopPoint) < float(StopLoss_Point_bf):
+                    StopLoss_Point = StopPoint
+                    continue
+                else:
+                    break
+            print("StopPoint =>" + str(StopLoss_Point))
+            for StopPoint in StopLoss:  ### Check Sale to Sale and Alarm ###
+                if float(LastPrice) > float(StopPoint) and float(LastPrice) > float(StopLoss_Point_bf):
+                    StopLoss_Point_bf = StopPoint
+                    print("End Stoppoint =>" + str(float(StopLoss[len(StopLoss) - 1])))
+                    if float(LastPrice) > float(StopLoss[len(StopLoss) - 1]):
+                        StopLoss_Point = float(LastPrice)
+                        #break
                     else:
-                        StopLoss_Point = LastPrice
-            #StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))  ## current stop loss
+                        continue
+                if float(LastPrice) > float(StopLoss[0]):
+                    #if   float(LastPrice) > float(StopLoss_Point_bf)  and float(LastPrice) < float(StopPoint):
+                    if float(LastPrice) > float(StopLoss_Point_bf):
+                        if StopLoss.index(StopPoint) - 1 > 0:
+                            StopLoss_Point = StopLoss[StopLoss.index(StopPoint) - 1]
+                        print("StopPoint Pass =>" + str(StopLoss_Point_bf) + "\n")
+                        print("!! Update TrailingStop =>" + str(LastPrice) + " to New Value\n")
+                        print("Next StopPoint =>" + str(float(StopPoint)) + "")
+                        CK = Update_Stoppoint(UUID, Exchange, LastPrice)
+                        if CK == "OK":
+                            print('Update_StopPoint=' + str(LastPrice) + " => Completed")
+                            return ('StopLossUpdate', float(StopLoss_Point_bf), StopLoss)
+
+                        break
+                    elif float(LastPrice) < float(StopLoss_Point_bf) and float(LastPrice) > float(StopLoss_Point):
+                        print("Price Down less than Last Price Update => " + str(StopLoss_Point_bf) + "")
+                        print("Price Down Over Last StopPoint  =>" + str(StopLoss_Point))
+                        # return ('StopLoss', LastPrice, StopLoss)
+                        return ('PriceDownOverStopLoss', float(LastPrice), StopLoss)
+                    elif float(LastPrice) < float(StopLoss_Point):
+                        print("Sale because LastPrice less than StopPoint " + str(float(StopLoss_Point)))
+                        return ('StopLoss', LastPrice, StopLoss)
+                    elif float(LastPrice) < float(StopLoss_Point_bf):
+                        print("PriceDown less than lastprice update => " + str(StopLoss_Point_bf) + "")
+                        print("PriceDown to =>" + str(StopLoss_Point))
+                        #return ('StopLoss', LastPrice, StopLoss)
+                        return ('PriceDownStopLoss', float(LastPrice), StopLoss)
+                elif float(LastPrice) < float(StopLoss[0]) and float(LastPrice) < (StopLoss_Point_bf):
+                    print("Price very down !! " + str(LastPrice))
+                    return ('PriceDownBuyRate', LastPrice, StopLoss)
+
+        elif HaveCustom == False and StopLoss != "" or  HaveCustom == False and StopLoss != 0:
+            StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))  ## current stop loss
             print('StopLoss_Point=' + str(StopLoss_Point))
             print('StopLoss_Point_Action=' + str(StopLoss_Point_bf))
             if LastPrice > StopLoss_Point_bf:  ## Price Up
@@ -164,7 +216,7 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
     print("--------------------------")
     print('1.Start Bot cutloss BTS ..')
     print('2.BuyRate=>' + str(BuyRate))
-    print('2.StopLoss=>' + str(StopLoss))
+    print('2.StopPoint=>' + str(StopLoss))
     print('3.CutLoss=>' + str(CutLoss))
     # LastPrice = Get_Bittrex_Price(Coin, Exchange)  ## Sim for Tesss
     # LastPrice = get_lastprice(Exchange)
@@ -178,20 +230,66 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
     print("--------------------------")
     ## Price UP ##
     if LastPrice > BuyRate:
-        if StopLoss != "" or StopLoss != 0:
-            StopLoss_Point_bf = Get_BittrexDB(UUID, Exchange, 'ckloss', 'StoplossPoint') ## Stop loss before
-            if HaveCustom == False:
-                StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))  ## current stop loss
-            if HaveCustom == True:
-                for StopPoint in StopLoss:
-                    if StopLoss_Point_bf < int(StopPoint):
-                        StopLoss_Point=int(StopPoint)
-                        break
-                    else:
-                        StopLoss_Point = LastPrice
+        StopLoss_Point_bf = Get_BittrexDB(UUID, Exchange, 'ckloss', 'StoplossPoint') ## Stop loss before
+        print("StopLossPoint BF=>"+str(StopLoss_Point_bf))
+        if StopLoss_Point_bf == 0:
+            CK=Update_Stoppoint(UUID, Exchange, LastPrice)
+            if CK == "OK":
+                print("Update StopPoint to LastPrice=>" + str(StopLoss_Point_bf))
+        if HaveCustom == True and  StopLoss != "" or HaveCustom == True  and StopLoss != 0:
+            #StopLoss_Point = LastPrice
+            for StopPoint in StopLoss:  ### Check StopPoint Update ###
+                if float(StopPoint) < float(StopLoss_Point_bf):
+                    StopLoss_Point = StopPoint
+                    continue
+                else:
+                    break
 
-            print('StopLoss_Point=' + str(StopLoss_Point))
-            print('StopLoss_Point_Action=' + str(StopLoss_Point_bf))
+            print("StopPoint =>"+str(StopLoss_Point))
+            for StopPoint in StopLoss:  ### Check Sale to Sale and Alarm ###
+                if float(LastPrice) > float(StopPoint) and float(LastPrice) > float(StopLoss_Point_bf):
+                    StopLoss_Point_bf=StopPoint
+                    print("End Stoppoint =>"+str(float(StopLoss[len(StopLoss)-1])))
+                    if float(LastPrice) > float(StopLoss[len(StopLoss)-1]):
+                        StopLoss_Point=float(LastPrice)
+                        #break
+                    else:
+                        continue
+                if float(LastPrice) > float(StopLoss[0]):
+                    #if   float(LastPrice) > float(StopLoss_Point_bf)  and float(LastPrice) < float(StopPoint):
+                    if  float(LastPrice) > float(StopLoss_Point_bf):
+                        if  StopLoss.index(StopPoint) - 1 > 0:
+                            StopLoss_Point=StopLoss[StopLoss.index(StopPoint) - 1]
+                        print("StopPoint Pass =>" +str(StopLoss_Point_bf) + "\n")
+                        print("!! Update TrailingStop =>" + str(LastPrice) + " to New Value\n")
+                        print("Next StopPoint =>" + str(float(StopPoint)) + "")
+                        CK = Update_Stoppoint(UUID, Exchange, LastPrice)
+                        if CK == "OK":
+                            print('Update_StopPoint=' + str(LastPrice) + " => Completed")
+                            return ('StopLossUpdate',float(StopLoss_Point_bf), StopLoss)
+
+                        break
+                    elif float(LastPrice) < float(StopLoss_Point_bf) and float(LastPrice) > float(StopLoss_Point):
+                        print("Price Down less than Last Price Update => " + str(StopLoss_Point_bf) + "")
+                        print("Price Down Over Last StopPoint  =>" + str(StopLoss_Point))
+                        # return ('StopLoss', LastPrice, StopLoss)
+                        return ('PriceDownOverStopLoss', float(LastPrice), StopLoss)
+                    elif float(LastPrice) < float(StopLoss_Point):
+                        print("Sale because LastPrice less than StopPoint "+str(float(StopLoss_Point)))
+                        return ('StopLoss', LastPrice, StopLoss)
+                    elif float(LastPrice) < float(StopLoss_Point_bf):
+                        print("PriceDown less than lastprice update => " + str(StopLoss_Point_bf) + "")
+                        print("PriceDown to =>"+str(StopLoss_Point))
+                        #return ('StopLoss', LastPrice, StopLoss)
+                        return ('PriceDownStopLoss', float(LastPrice), StopLoss)
+                elif float(LastPrice) < float(StopLoss[0]) and float(LastPrice) < (StopLoss_Point_bf):
+                    print("Price very down !! "+str(LastPrice))
+                    return ('PriceDownBuyRate', LastPrice, StopLoss)
+
+        elif HaveCustom == False and  StopLoss != "" or HaveCustom == False and StopLoss != 0:
+            StopLoss_Point = LastPrice - (LastPrice * (StopLoss / 100))  ## current stop loss
+            print('Stop_Point=' + str(StopLoss_Point))
+            print('Stop_Point_Action=' + str(StopLoss_Point_bf))
             if LastPrice > StopLoss_Point_bf:  ## Price Up
                 #print('StopLoss_Point2=' + str(StopLoss_Point_bf))
                 if StopLoss_Point <= BuyRate:
@@ -211,7 +309,7 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
                     print("Wait Price less than Last Stop Point Action")
                     print("Stop Point Action is "+str(StopLoss_Point_bf))
                     #return ('StopLoss Action Update', StopLoss_Point_bf)
-            # if StopLoss_Point > BuyRate and LastPrice <= StopLoss_Point2:
+                # if StopLoss_Point > BuyRate and LastPrice <= StopLoss_Point2:
             elif LastPrice < StopLoss_Point_bf:
                 print("Sale coin because last price less than stop point => "+str(StopLoss_Point_bf)+"")
                 return ('StopLoss', LastPrice,StopLoss)
@@ -229,6 +327,7 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
 ## Find price deep dows ## Find price low and Buy
 def buy_StopBuy_shadow(UUID, Exchange, LastPrice,StartRate):
     print("UUID="+str(UUID))
+    StopBuy_Point=0
     StopBuy = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopBuy')
     StopBuy=(list(StopBuy.split(",")))
     print("Debug StopBuy"+str(StopBuy))
@@ -255,19 +354,66 @@ def buy_StopBuy_shadow(UUID, Exchange, LastPrice,StartRate):
             StopBuy_Point_bf = Get_BittrexDB(UUID, Exchange, 'ckstopbuy', 'StopBuyPoint') ## Stop loss before
             if StopBuy_Point_bf == 0:
                StopBuy_Point_bf = 1000000
+            print("StopBuy_Point_bf BF=>" + str(StopBuy_Point_bf))
+            if StopBuy_Point_bf == 0:
+                CK = Update_StopBuyPoint(UUID, Exchange, LastPrice)
+                if CK == "OK":
+                    print("Update StopPoint to LastPrice=>" + str(StopBuy_Point_bf))
+            if HaveCustom == True:
+                # StopLoss_Point = LastPrice
+                for StopPoint in StopBuy:  ### Check StopPoint Update ###
+                    if float(StopPoint) < float(StopBuy_Point_bf):
+                        StopBuy_Point = StopPoint
+                        continue
+                    else:
+                        break
+
+                print("StopBuyPoint =>" + str(StopBuy_Point))
+                for StopPoint in StopBuy:  ### Check Sale to Sale and Alarm ###
+                    if float(LastPrice) < float(StopPoint) and float(LastPrice) < float(StopBuy_Point_bf):
+                        StopBuy_Point_bf = StopPoint
+                        print("End StopBuy =>" + str(float(StopBuy[len(StopBuy) - 1])))
+                        if float(LastPrice) < float(StopBuy[len(StopBuy) - 1]):
+                            StopBuy_Point = float(LastPrice)
+                            #break
+                        else:
+                            continue
+                    if float(LastPrice) < float(StopBuy[0]):
+                        #if   float(LastPrice) > float(StopLoss_Point_bf)  and float(LastPrice) < float(StopPoint):
+                        if float(LastPrice) < float(StopBuy_Point_bf):
+                            if StopBuy.index(StopPoint) - 1 > 0:
+                                StopLoss_Point = StopBuy[StopBuy.index(StopPoint) - 1]
+                            print("StopBuy Pass =>" + str(StopBuy_Point_bf) + "\n")
+                            print("!! Update TrailingStopBuy =>" + str(LastPrice) + " to New Value\n")
+                            print("Next StopBuy =>" + str(float(StopPoint)) + "")
+                            CK = Update_StopBuyPoint(UUID, Exchange, LastPrice)
+                            if CK == "OK":
+                                print('Update_StopBuy=' + str(LastPrice) + " => Completed")
+                                return ('StopBuyUpdate', float(StopBuy_Point_bf), StopBuy)
+
+                            break
+                        elif float(LastPrice) > float(StopBuy_Point_bf) and float(LastPrice) < float(StopBuy_Point):
+                            print("Price Up more than Last Price Update => " + str(StopBuy_Point_bf) + "")
+                            print("Price Up Over Last StopBuy  =>" + str(StopBuy_Point))
+                            # return ('StopLoss', LastPrice, StopLoss)
+                            return ('PriceUpOverStopBuy', float(LastPrice), StopBuy)
+                        elif float(LastPrice) > float(StopBuy_Point):
+                            print("Sale because LastPrice more than StopPoint " + str(float(StopBuy_Point)))
+                            return ('StopBuy', LastPrice, StopBuy)
+                        elif float(LastPrice) > float(StopBuy_Point_bf):
+                            print("PriceUp more than lastprice update => " + str(StopBuy_Point_bf) + "")
+                            print("PriceUp to =>" + str(StopBuy_Point))
+                            #return ('StopLoss', LastPrice, StopLoss)
+                            return ('PriceUpStopBuy', float(LastPrice), StopBuy)
+                    elif float(LastPrice) > float(StopBuy[0]) and float(LastPrice) > (StopBuy_Point_bf):
+                        print("Price Uppp !! " + str(LastPrice))
+                        return ('PriceUpStopRisk', LastPrice, StopBuy)
+
             if HaveCustom == False:
                 StopBuy_Point = LastPrice + (LastPrice * (StopBuy / 100))  ## current cutloss
                 print('StopBuy_Point=' + str(StopBuy_Point))
                 print('StopBuy_Point_Action=' + str(StopBuy_Point_bf))
-            if HaveCustom == True:
-                for StopPoint in StopBuy:
-                    if StopBuy_Point_bf > int(StopPoint):
-                        StopBuy_Point = int(StopPoint)
-                        continue
-                    else:
-                        StopBuy_Point = LastPrice
-
-            if LastPrice < StopBuy_Point_bf:  ## Price is Down
+            if LastPrice < StopBuy_Point_bf  and HaveCustom == False:  ## Price is Down
                 #print('StopLoss_Point2=' + str(StopLoss_Point_bf))
                 if StopBuy_Point >= StartRate:
                     print("StopBuy Up than buyer update StopBuy = 0")
@@ -845,59 +991,117 @@ def cancel_coin(id, order_id, symbol, exchange):
         return (str(e) + 'Exchange Error')
 
 
-def get_coin_information(id, symbol,line):
-    try:
-        INFO = "[COIN INFORMATION] \n"
-        info = (id.fetch_ticker(symbol))
-        print(info)
-        bid=(info['info']['orderbook']['bids']['volume'])
-        aks=(info['info']['orderbook']['asks']['volume'])
 
-        INFO += str("Coin:" + symbol + "\n")
-        INFO += str("Change:" + str(info['info']['change']) + " %\n")
-        INFO += str("[Buy/Sell]:"+str(format_floatc(((bid/aks)*100),2))+" %\n")
-        INFO += str("LastPrice:" + str(format_floatc((info['info']['last_price']),4)) + "\n")
-        INFO += "|--------------------| \n"
-        ST = id.fetch_order_book(symbol)
-        #print(ST)
-        count = 0
-        INFO += ("[LAST BX ORDER]\n")
-        INFO+=("[ BIDS ][Vl:"+str(format_floatc(bid,4))+"]\n")
-        for data in ST['bids']:
-            count += 1
-            INFO +=("("+str(count)+")|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
-            if count == line:
-                break
-        count = 0
-        INFO += ("[ ASKS ][Vl:"+str(format_floatc(aks,4))+"]\n")
-        for data in ST['asks']:
-            count += 1
-            INFO += ("("+str(count)+")|"+str(format_floatc((data[0]),4)) + "|" + str(format_floatc((data[1]),4)) + "\n")
-            if count == line:
-                break
-        INFO +="|--------------------| \n"
 
-        #print(INFO)
-        return INFO
 
-    except ccxt.DDoSProtection as e:
-        #print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
-        return (str(e) + 'DDoS Protection (ignoring)')
-    except ccxt.RequestTimeout as e:
-        #print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
-        return (str(e) + 'Request Timeout (ignoring)')
-    except ccxt.ExchangeNotAvailable as e:
-        #print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
-        return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
-    except ccxt.AuthenticationError as e:
-        #print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
-        return (str(e) + 'Authentication Error (missing API keys, ignoring)')
-    except ccxt.ExchangeError as e:
-        return (str(e) + 'Exchange Error')
+def rsiFunc(prices, n=14):
+    # print("prices +> " + str(prices))
+    deltas = np.diff(prices)
+    seed = deltas[:n + 1]
+    up = seed[seed >= 0].sum() / n
+    down = -seed[seed < 0].sum() / n
+    rs = up / down
+    rsi = np.zeros_like(prices)
+    rsi[:n] = 100. - 100. / (1. + rs)
 
-def good_coin_ck(id,exc,base_market):
+    for i in range(n, len(prices)):
+        delta = deltas[i - 1]  # cause the diff is 1 shorter
+
+        if delta > 0:
+            upval = delta
+            downval = 0.
+        else:
+            upval = 0.
+            downval = -delta
+
+        up = (up * (n - 1) + upval) / n
+        down = (down * (n - 1) + downval) / n
+
+        rs = up / down
+        rsi[i] = 100. - 100. / (1. + rs)
+    # print("rsi="+str(rsi))
+    return rsi
+
+
+def get_price_history(coin,count):
+    timef=[]
+    stock_data=[]
+    if coin == "BCH":
+        id=27
+    elif coin == "BTC":
+        id=1
+    elif coin == "DASH":
+        id=22
+    elif coin == "ETH":
+        id=21
+    elif coin == "EVX":
+        id=28
+    elif coin == "GNO":
+        id=24
+    elif coin == "LTC":
+        id=30
+    elif coin == "OMG":
+        id=26
+    elif coin == "POW":
+        id=31
+    elif coin == "REP":
+        id=23
+    elif coin == "XRP":
+        id=25
+    elif coin == "XZC":
+        id=29
+    current_time = time.time()
+    for count in range (0,30):
+        s=str(current_time-(86400*count))
+        #print(str(s))
+        t = datetime.fromtimestamp(float(s))
+        fmt = "%Y-%m-%d"
+        timef.append(t.strftime(fmt))
+
+    #print(str(timef))
+    #sorted(timef, key=lambda d: map(int, d.split('-')))
+    timer=sorted(timef,key=lambda x:datetime.strptime(x,'%Y-%m-%d'),reverse=False)
+    for date_c in timer:
+        url="https://bx.in.th/api/tradehistory/?pairing="+str(id)+"&date="+str(date_c)
+        #print(url)
+        candle = requests.get(url).json()
+        if str(date_c) != None and str(candle['data']["high"]) != None and str(candle['data']["low"])  != None and \
+          str(candle['data']["open"]) != None and  str(candle['data']["close"]) != None and str(candle['data']["volume"]) != None:
+            d=date_c+' 00:00:00'
+            p='%Y-%m-%d %H:%M:%S'
+            epoch = int(time.mktime(time.strptime(d, p)))
+            line =(str(float(epoch)) + " " + str(candle['data']["high"]) + " " + str(candle['data']["low"]) + " " + str(
+            candle['data']["open"]) + " " + str(candle['data']["close"]) + " " + str(candle['data']["volume"]))
+        #print(str(line))
+            stock_data.append(line)
+            #print(str(stock_data))
+        else:
+            break
+    return stock_data
+
+
+            #else:
+            #    continue
+            #return INFO
+   # except ccxt.DDoSProtection as e:
+        # print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+   #     return (str(e) + 'DDoS Protection (ignoring)')
+   # except ccxt.RequestTimeout as e:
+        # print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+   #     return (str(e) + 'Request Timeout (ignoring)')
+   # except ccxt.ExchangeNotAvailable as e:
+        # print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+   #     return (str(e) + 'Exchange Not Available due to downtime or maintenance (ignoring)')
+   # except ccxt.AuthenticationError as e:
+        # print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+   #     return (str(e) + 'Authentication Error (missing API keys, ignoring)')
+   # except ccxt.ExchangeError as e:
+   #    return (str(e) + 'Exchange Error')
+
+#def good_coin_ck(id,exc,base_market):
     try:
         INFO=""
+
         PBUY=[]
         exchange_found = exc in ccxt.exchanges
         if exchange_found:
@@ -1434,12 +1638,53 @@ def sync_balance_all(id,Exchange,ChatID):
 
 
 def main():
+    global datalist
     # bxin=ccxt.bxinth()
     bxin = ccxt.bxinth({
         'apiKey': '063689a6d467',
         'secret': '69e49ad534c5',
         "enableRateLimit": True,
     })
+    datalist=mp.Queue()
+    p=mp.Process(target=rsi_coin,args=('5',None,datalist))
+    p.start()
+
+    while True:
+            #datalist.get()
+            data=datalist.get()
+            if data != "":
+                print("for show -> "+str(data))
+
+    #print(rsi_coin(15))
+    #rsiFunc
+   # exchange_found = "bxinth" in ccxt.exchanges
+   # if exchange_found:
+   #     exchange = getattr(ccxt, "bxinth")({
+            # 'proxy':'https://cors-anywhere.herokuapp.com/',
+   #         })
+        # load all markets from the exchange
+   #     markets = exchange.load_markets()
+   #     tuples = list(ccxt.Exchange.keysort(markets).items())
+        #dump(pink('{:<9} {:<9} {:<9} {:<9}'.format('id', 'symbol', 'base', 'quote')))
+   #     for (k, v) in tuples:
+   #         if v['quote'] == str('THB'):
+                #dump('{:<9} {:<9} {:<9} {:<9}'.format(v['id'], v['symbol'], v['base'], v['quote'], v['info']))
+               # print(v['base'])
+   #             stock_data = get_price_history(v['base'], 1)
+   #             date, highp, lowp, openp, closep, volume = np.loadtxt(stock_data,
+      #                                                                delimiter=' ',
+      #                                                                unpack=True)
+    #            print(v['base']+" RSI=> "+str(rsiFunc(closep)[29])+" %")
+    #       else:
+    #            continue
+                #dump('Exchange ' + red(id) + ' not found')
+                #print_supported_exchanges()
+
+   # stock_data=get_price_history("POW",25)
+    #date, highp, lowp, openp, closep, volume = np.loadtxt(stock_data,
+    #                                                delimiter=' ',
+    #                                                      unpack=True)
+    #print(rsiFunc(closep)[len(rsiFunc(closep))-1])
    # print(get_lastprice(bxin,'BTC/THB'))
     #info = bxin.fetch_ticker('DASH/THB')
     #print("bids"+str(info['info']['orderbook']['bids']['volume']))
