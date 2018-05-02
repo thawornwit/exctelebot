@@ -141,7 +141,7 @@ def sell_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
                         CK = Update_Stoppoint(UUID, Exchange, LastPrice)
                         if CK == "OK":
                             print('Update_StopPoint=' + str(LastPrice) + " => Completed")
-                            return ('StopLossUpdate', float(StopLoss_Point_bf), StopLoss)
+                            return ('StopLossUpdate', float(LastPrice), StopLoss)
 
                         break
                     elif float(LastPrice) < float(StopLoss_Point_bf) and float(LastPrice) > float(StopLoss_Point):
@@ -266,7 +266,7 @@ def buy_trailling_stop_shadow(UUID, Exchange, LastPrice,BuyRate):
                         CK = Update_Stoppoint(UUID, Exchange, LastPrice)
                         if CK == "OK":
                             print('Update_StopPoint=' + str(LastPrice) + " => Completed")
-                            return ('StopLossUpdate',float(StopLoss_Point_bf), StopLoss)
+                            return ('StopLossUpdate',float(LastPrice), StopLoss)
 
                         break
                     elif float(LastPrice) < float(StopLoss_Point_bf) and float(LastPrice) > float(StopLoss_Point):

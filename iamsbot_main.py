@@ -84,7 +84,9 @@ CLOSECON=[]
 STOPPOINT=[]
 CKORDERWAIT=[]
 PROCESS_JOBS=[]
-menucoinmarkup = {'keyboard': [['BACK'], ['BTC', 'BCH','POW'], ['LTC', 'OMG', 'ETH'], ['EVX', 'DASH', 'XZC'], ['GNO', 'REP', 'XRP']],'resize_keyboard': True}
+menucoinmarkup = {'keyboard': [['BACK','THB'],['BTC','BCH','POW'], ['LTC', 'OMG', 'ETH'], ['EVX', 'DASH', 'XZC'], ['GNO', 'REP', 'XRP']],'resize_keyboard': True}
+menucoinbalance = {'keyboard': [['BACK','THB'],['BTC','BCH','POW'], ['LTC', 'OMG', 'ETH'], ['EVX', 'DASH', 'XZC'], ['GNO', 'REP', 'XRP']],'resize_keyboard': True}
+
 menuexchange = {'keyboard': [['BACK'], ['BXINTH', 'TDAX'], ['BITTREX', 'YOBIT']],'resize_keyboard': True}
 menubuypercent = {'keyboard': [['BACK'], ['10%', '20%','25%'], ['40%', '45%','50%'],['60%', '75%','100%']],'resize_keyboard': True}
 menusellpercent = {'keyboard': [['BACK'], ['10%', '20%','25%'], ['40%', '45%','50%'],['60%', '75%','100%']],'resize_keyboard': True}
@@ -436,6 +438,7 @@ class YourBot(telepot.Bot):
        # global Pause
         #Pause = "YES"
         bot.sendMessage(chat_id, "[ SELECT COIN ] \
+            \n/THB\
             \n/BTC \
             \n/DASH \
             \n/LTC \
@@ -780,11 +783,11 @@ class YourBot(telepot.Bot):
                 bot.sendChatAction(chat_id, 'typing')
                 INFO = ""
                 coin = msg['text']
-                ST = get_balance('bxinth',"THB",str(chat_id))  ## MArket main
-                if ST == False:
-                    bot.sendMessage(chat_id,"\U0000274C [THB] Balance Not Available !!")
-                else:
-                    INFO +=(ST[2])
+                #ST = get_balance('bxinth',"THB",str(chat_id))  ## MArket main
+                #if ST == False:
+                #    bot.sendMessage(chat_id,"\U0000274C [THB] Balance Not Available !!")
+                #else:
+                #    INFO +=(ST[2])
                     #bot.sendMessage(chat_id," Balance Available\n" + ST)
                 #--------------#
                 ST = get_balance('bxinth', coin,str(chat_id))
@@ -1573,8 +1576,11 @@ class YourBot(telepot.Bot):
                 if "/" in str(coin):
                     coin = str(coin).split("/")[1]
                 market = "THB"
-                information=mp.Process(target=self.get_coin_information,args=(bxin,coin+"/"+market,3,chat_id))
-                information.start()
+                if coin != market:
+                    information=mp.Process(target=self.get_coin_information,args=(bxin,coin+"/"+market,3,chat_id))
+                    information.start()
+                else:
+                    bot.sendMessage(chat_id,"THB(ThaiBath) is the market of coin,Select new coin..")
                 #bot.sendMessage(chat_id, str(get_coin_information(bxin, coin + "/" + market, 3)))
                 ### Pause action notify
                 #Pause = "YES"
@@ -4224,8 +4230,7 @@ class YourBot(telepot.Bot):
                             volumn_st = format_floatc((qty / StopBuy_Price),4)
                             volumn_ls = format_floatc((qty / lastprice),4)
                             NOTIBSS_INFO += ("\n ----------- \
-                                     \n"+emoji.emojize(':star2:')+""+emoji.emojize(':star2:')+""+emoji.emojize(':star2:')+"\
-                                     \n"+emoji.emojize(':exclamation:')+"Please Take Action StopBuy(BLS) Now!! \
+                                     \n""Take Action StopBuy(BLS) Now!! \
                                      \nCoin:" + coin + "\
                                      \nStopBuy Percent:" + str(result[2]) + " % \
                                      \nBuy " + str(float(qty)) + "\
@@ -4335,7 +4340,7 @@ class YourBot(telepot.Bot):
                             NOTISTATE_ACTION.append("bls_stoprisk")
                             volumn_st = format_floatc((qty / LastPrice),4)
                             NOTIBSS_INFO += ("\n--------------------- \
-                            \n"+emoji.emojize(':exclamation:')+"Please Take Action StopRisk Now!!! \
+                            \n""Take Action StopRisk Now!!! \
                             \nCoin:" + coin + \
                             "\nBuy:" + str(float(qty)) + \
                             "\nVolumn:" + str(volumn_st) + "\
@@ -4507,7 +4512,7 @@ class YourBot(telepot.Bot):
                          \nBuy:" + str(float(qty)) + "\
                          \nSold:" + str(format_floatc(((lastprice / rate) * qty), 2)) + "\
                          \nChange Fee " + str(fee) + "\
-                         \nProfit " + str(format_floatc(profit_fee, 2)) + "Bath" \
+                         \nProfit " + str(format_floatc(profit_fee, 2)) + "" \
                                     , reply_markup=mainmenu)
 
                     Insert_Profit(order_id, time.strftime('%Y-%m-%d %H:%M:%S'), exchange, coin, volumn, qty,
@@ -4531,6 +4536,25 @@ class YourBot(telepot.Bot):
                 if result != None and len(result) == 3:
                     if result[0] == "StopLossUpdate":
                         StopLoss_Point = result[1]
+                        LastPrice=StopLoss_Point
+                        StopLoss = result[2]
+                        StopLossinfo = ""
+                        if len(StopLoss) > 1:
+                            for st in list(StopLoss):
+                                if StopLoss.index(st) + 1 >= len(StopLoss):
+                                    if LastPrice > float(st):
+                                        StopLossinfo += "\n==[" + str(st) + "]"
+                                        StopLossinfo += "\n=>[" + str(LastPrice) + "]"
+                                        break
+                                if float(LastPrice) > float(st) and float(LastPrice) <= float(
+                                        StopLoss[StopLoss.index(st) + 1]):
+                                    StopLossinfo += "\n=>[" + str(st) + "]"
+                                    continue
+                                else:
+                                    StopLossinfo += "\n==[" + str(st) + "]"
+                                    continue
+                        else:
+                            StopLossinfo=StopLoss+" %"
                         NOTIBTS_INFO += ("\n\
                               \n(" + str(COUNT) + ")[= Update Point(BTS) =]\
                               \nOrder:/" + order_id + "\
@@ -4549,7 +4573,7 @@ class YourBot(telepot.Bot):
                                              "\nBuy " + str(float(qty)) + \
                                              "\nRate " + str(float(rate)) + \
                                              "\nNow[LastPrice]:" + str(float(lastprice)) + \
-                                             "\nNext[StopPoint]:" + str(float(StopLoss_Point)) + \
+                                             "\nStopPoint[=>]:"+ str(StopLossinfo)+ \
                                              "\nProfit(StopLoss):" + str(format_floatc(profit_fee, 2)) + \
                                              "\nProfit(LastPrice):" + str(format_floatc(profit_lastfee, 2)) + \
                                              "\nAccept this Action or not?")
@@ -4604,13 +4628,11 @@ class YourBot(telepot.Bot):
                             profit = (((CutLossPrice / rate) * qty) - qty)
                             profit_fee = (profit - (profit * fee))
                             NOTIBTS_INFO += ("\
-                                     \nPlease Take Action(BTS) CutLoss Now!! \
-                                     \nCoin:" + coin + "\
-                                     \nCutLoss Percent:" + str(result[2]) + " % \
+                                     \nTake Action(BTS) CutLoss Now!! \
+                                     \nCutLoss Percent:" + str(result[2]) + "% \
                                      \nBuy " + str(float(qty)) + " \
                                      \nRate:" + str(float(rate)) + " \
                                      \nSold " + str(format_floatc(((CutLossPrice / rate) * qty), 2)) + "\
-                                     \nChange Fee " + str(fee) + "\
                                      \nProfit " + str(format_floatc(profit_fee, 2)) + "\
                                      \nAccept this Action or not?")
                             time.sleep(1)
@@ -4645,7 +4667,7 @@ class YourBot(telepot.Bot):
                             \nBuy:" + str(float(qty)) + "\
                             \nSold:" + str(format_floatc(((CutLossPrice / rate) * qty), 2)) + "\
                             \nChange Fee " + str(fee) + "\
-                            \nProfit " + str(format_floatc(profit_fee, 2)) + " Bath",
+                            \nProfit " + str(format_floatc(profit_fee, 2)) + "",
                                             reply_markup=mainmenu)
 
                             Insert_Profit(order_id, time.strftime('%Y-%m-%d %H:%M:%S'), exchange, coin,volumn,qty,format_floatc(((CutLossPrice / rate) * qty),3),format_floatc(profit_fee, 2))
@@ -4707,13 +4729,29 @@ class YourBot(telepot.Bot):
                             profit = (((LastPrice / rate) * qty) - qty)
                             fee = 0.0025
                             profit_fee = (profit - (profit * fee))
+                            StopLoss = result[2]
+                            StopLossinfo = ""
+                            if len(StopLoss) > 1:
+                                for st in list(StopLoss):
+                                    if StopLoss.index(st) + 1 >= len(StopLoss):
+                                        if LastPrice > float(st):
+                                            StopLossinfo += "\n==[" + str(st) + "]"
+                                            StopLossinfo += "\n=>[" + str(LastPrice) + "]"
+                                            break
+                                    if float(LastPrice) > float(st) and float(LastPrice) <= float(
+                                            StopLoss[StopLoss.index(st) + 1]):
+                                        StopLossinfo += "\n=>[" + str(st) + "]"
+                                        continue
+                                    else:
+                                        StopLossinfo += "\n==[" + str(st) + "]"
+                                        continue
+                            else:
+                                StopLossinfo = StopLoss + " %"
                             NOTIBTS_INFO += ("\n--------------------- \
-                            \n"+emoji.emojize(':star2:')+""+emoji.emojize(':star2:')+""+emoji.emojize(':star2:')+"\
-                            \n"+emoji.emojize(':exclamation:')+"Please Take Action StopLoss Now!!! \
-                            \nCoin:" + coin + \
+                            \n""Take Action StopLoss Now!!! \
+                            \nStopPoint[=>]:"+str(StopLossinfo)+\
                             "\nBuy:" + str(float(qty)) + \
                             "\nSold:" + str(format_floatc(((LastPrice / rate) * qty), 2)) + "\
-                            \nChange Fee " + str(fee) + "\
                             \nProfit " + str(format_floatc(profit_fee, 2)) + "Bath \
                             \nAccept this Action or not?")
                            # if Pause == "NO":
@@ -4752,7 +4790,7 @@ class YourBot(telepot.Bot):
                                             \nBuy:" + str(float(qty)) + "\
                                             \nSold:" + str(format_floatc(((LastPrice / rate) * qty), 2)) + "\
                                             \nChange Fee:" + str(fee) + "\
-                                            \nProfit:" + str(format_floatc(profit_fee, 2)) + " Bath",
+                                            \nProfit:" + str(format_floatc(profit_fee, 2)) + "",
                                             reply_markup=mainmenu)
 
                             Insert_Profit(order_id, time.strftime('%Y-%m-%d %H:%M:%S'), exchange, coin, volumn, qty,
@@ -4773,6 +4811,126 @@ class YourBot(telepot.Bot):
                                 bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status close =>" + CK)
                              bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                              continue
+                    elif result[0] == "PriceDownOverStopLoss":
+                        LastPrice = result[1]
+                        StopLoss=result[2]
+                        StopLossinfo=""
+                        for st in list(StopLoss):
+                            if StopLoss.index(st) + 1 >= len(StopLoss):
+                                if LastPrice > float(st):
+                                    StopLossinfo += "\n==[" + str(st) + "]"
+                                    StopLossinfo += "\n=>[" + str(LastPrice) + "]"
+                                    break
+                            if float(LastPrice) > float(st) and float(LastPrice) <= float(
+                                    StopLoss[StopLoss.index(st) + 1]):
+                                StopLossinfo += "\n=>[" + str(st) + "]"
+                                continue
+                            else:
+                                StopLossinfo += "\n==[" + str(st) + "]"
+                                continue
+                        print("StopLossInfo"+str(StopLossinfo))
+                        time.sleep(2)
+                        NOTIBTS_INFO += (
+                                "\n("+str(COUNT)+")[Price Upper than StopPoint(BTS)]\
+                                            \nOrder:/" + order_id + "\
+                                            \nCoin:" + coin + "\
+                                            \nPrice:" + str(float(LastPrice)))
+                        profit = (((LastPrice / rate) * qty) - qty)
+                        fee = 0.0025
+                        profit_fee = (profit - (profit * fee))
+                        NOTIBTS_INFO += ("\n--------------------- \
+                                \nPrice Upper than StopPoint\
+                                \nStopPoint[=>]"+str(StopLossinfo)+"\
+                                \nBuy:" + str(float(qty))+\
+                                "\nSold:" + str(format_floatc(((LastPrice / rate) * qty), 2)) + "\
+                                \nProfit " + str(format_floatc(profit_fee, 2)) + " \
+                                \nAccept this Action or not?")
+                            # if Pause == "NO":
+                            # bot.sendMessage(chat_id, NOTIBTS_INFO)
+                        self.buysellaction(chat_id, NOTIBTS_INFO, order_id, 'sell')
+                        COUNT += 1
+                        NOTIBTS_INFO = ""
+                        time.sleep(10)
+                    elif result[0] == "PriceDownStopLoss":
+                        LastPrice = result[1]
+                        StopLoss = result[2]
+                        StopLossinfo = ""
+                        for st in list(StopLoss):
+                            if StopLoss.index(st) + 1 >= len(StopLoss):
+                                if LastPrice > float(st):
+                                    StopLossinfo += "\n==[" + str(st) + "]"
+                                    StopLossinfo += "\n=>[" + str(LastPrice) + "]"
+                                    break
+                            if float(LastPrice) > float(st) and float(LastPrice) <= float(
+                                    StopLoss[StopLoss.index(st) + 1]):
+                                StopLossinfo += "\n=>[" + str(st) + "]"
+                                continue
+                            else:
+                                StopLossinfo += "\n==[" + str(st) + "]"
+                                continue
+
+                        time.sleep(2)
+                        NOTIBTS_INFO += (
+                            "\n(" + str(COUNT) + ")[Price Lower than StopLoss(BTS)]\
+                                                \nOrder:/" + order_id + "\
+                                                \nCoin:" + coin + "\
+                                                \nPrice:" + str(float(LastPrice)))
+                        profit = (((LastPrice / rate) * qty) - qty)
+                        fee = 0.0025
+                        profit_fee = (profit - (profit * fee))
+                        NOTIBTS_INFO += ("\n--------------------- \
+                                    \nPrice Lower than StopLoss \
+                                    \nStopPoint[=>]:"+str(StopLossinfo)+"\
+                                    \nBuy:" + str(float(qty)) + "\
+                                    \nSold:" + str(format_floatc(((LastPrice / rate) * qty), 2)) + "\
+                                    \nProfit " + str(format_floatc(profit_fee, 2)) + " \
+                                    \nAccept this Action or not?")
+                        # if Pause == "NO":
+                        # bot.sendMessage(chat_id, NOTIBTS_INFO)
+                        self.buysellaction(chat_id, NOTIBTS_INFO, order_id, 'sell')
+                        COUNT += 1
+                        NOTIBTS_INFO = ""
+                        time.sleep(10)
+                    elif result[0] == "PriceDownBuyRate":
+                        LastPrice = result[1]
+                        StopLoss = result[2]
+                        StopLossinfo = ""
+                        for st in list(StopLoss):
+                            if StopLoss.index(st) + 1 >= len(StopLoss):
+                                if LastPrice > float(st):
+                                    StopLossinfo += "\n==[" + str(st) + "]"
+                                    StopLossinfo += "\n=>[" + str(LastPrice) + "]"
+                                    break
+                            if float(LastPrice) > float(st) and float(LastPrice) <= float(
+                                    StopLoss[StopLoss.index(st) + 1]):
+                                StopLossinfo += "\n=>[" + str(st) + "]"
+                                continue
+                            else:
+                                StopLossinfo += "\n==[" + str(st) + "]"
+                                continue
+                        time.sleep(2)
+                        NOTIBTS_INFO += (
+                            "\n(" + str(COUNT) + ")[Price near BuyRate(BTS)]\
+                                                \nOrder:/" + order_id + "\
+                                                \nCoin:" + coin + "\
+                                                \nPrice:" + str(float(LastPrice)))
+                        profit = (((LastPrice / rate) * qty) - qty)
+                        fee = 0.0025
+                        profit_fee = (profit - (profit * fee))
+                        NOTIBTS_INFO += ("\n--------------------- \
+                                    \nPrice near to BuyRate \
+                                    \nStopPoint[=>]:\n"+str(StopLossinfo)+"\
+                                    \nBuy:" + str(float(qty)) + \
+                                    "\nSold:" + str(format_floatc(((LastPrice / rate) * qty), 2)) + "\
+                                    \nProfit " + str(format_floatc(profit_fee, 2)) + "Bath \
+                                    \nAccept this Action or not?")
+                        # if Pause == "NO":
+                        # bot.sendMessage(chat_id, NOTIBTS_INFO)
+                        self.buysellaction(chat_id, NOTIBTS_INFO, order_id, 'sell')
+                        COUNT += 1
+                        NOTIBTS_INFO = ""
+                        time.sleep(10)
+
                 else:
                     print("Not Found Result trailling  !!")
                     continue
@@ -4920,6 +5078,7 @@ class YourBot(telepot.Bot):
                 if result != None and len(result) == 3:
                     if result[0] == "StopLossUpdate":
                         StopLoss_Point = result[1]
+                        LastPrice=StopLoss_Point
                         if "UpdateAct" not in UPDATE_ACT and "CloseOrder" not in NOTISTATE_ACTION:
                             NOTISTS_INFO += ("\
                               \n(" + str(COUNT) + ")[= Update Point(CTS) =]\
@@ -4956,22 +5115,42 @@ class YourBot(telepot.Bot):
                         if NT == "Noti" and allow_update_sts == "NO":
                             NOTISTATE_ACTION.clear()
                             NOTISTATE_ACTION.append('cts_update')
+                            StopLoss = result[2]
+                            StopLossinfo = ""
+                            if len(StopLoss) > 1:
+                                for st in list(StopLoss):
+                                    if StopLoss.index(st) + 1 >= len(StopLoss):
+                                        if LastPrice > float(st):
+                                            StopLossinfo += "\n==[" + str(st) + "]"
+                                            StopLossinfo += "\n=>[" + str(LastPrice) + "]"
+                                            break
+                                    if float(LastPrice) > float(st) and float(LastPrice) <= float(
+                                            StopLoss[StopLoss.index(st) + 1]):
+                                        StopLossinfo += "\n=>[" + str(st) + "]"
+                                        continue
+                                    else:
+                                        StopLossinfo += "\n==[" + str(st) + "]"
+                                        continue
+                            else:
+                                StopLossinfo=StopLoss+" %"
+                            print("StopLossInfo"+StopLossinfo)
+                            time.sleep(2)
+
                             print("!!! Update Point CTS to " + str(StopLoss_Point))
                             profit = (((StopLoss_Point / rate) * qty) - qty)
                             profit_last = (((lastprice / rate) * qty) - qty)
                             profit_fee = (profit - (profit * fee))
                             profit_lastfee = (profit_last - (profit_last * fee))
-                            NOTISTS_INFO += ("\n"+emoji.emojize(':rocket:')+"UpdateStopPoint(CTS) " + coin +" "\
+                            NOTISTS_INFO += ("\n""UpdateStopPoint(CTS) " + coin +" "\
                                              "\nOrder:/" + order_id + \
                                              "\nSaleVolumn:" + str(float(volumn)) + \
                                              "\nRateStart:" + str(float(rate)) + \
                                              "\nQty:" + str(float(qty)) + \
-                                             "\nNow[LastPrice]:" + str(float(lastprice)) + \
-                                             "\nNext[StopPoint]:" + str(float(StopLoss_Point)) + \
-                                             "\nChange Fee:" + str(fee) + \
+                                             "\nLastPrice:" + str(float(lastprice)) + \
+                                             "\nStopPoint[=>]:" + str(StopLossinfo) + \
                                              "\nProfit(StopLoss):" + str(format_floatc(float(profit_fee), 2)) + " \
-                                         \nProfit(LastPrice):" + str(format_floatc(float(profit_lastfee), 2)) + "\
-                                         \nAccept this Action or not?")
+                                              \nProfit(LastPrice):" + str(format_floatc(float(profit_lastfee), 2)) + "\
+                                              \nAccept this Action or not?")
                             #bot.sendMessage(chat_id, NOTISTS_INFO, reply_markup=mainmenu)
                             self.buysellaction(chat_id, NOTISTS_INFO, order_id,'sell')
                             COUNT += 1
@@ -4999,7 +5178,7 @@ class YourBot(telepot.Bot):
                                             \nCoin:" + coin + \
                                             "\nOrder:/" + order_id + \
                                             "\nSale Volumn:" + str(float(volumn)) + \
-                                            "\nRate Start:" + str(float(rate)) + \
+                                            "\nRateStart:" + str(float(rate)) + \
                                             "\nQty:" + str(float(qty)) + \
                                             "\nSold:" + str(format_floatc(float((lastprice / rate) * qty), 2)) + \
                                             "\nChange Fee:" + str(fee) + \
@@ -5035,13 +5214,14 @@ class YourBot(telepot.Bot):
 
                     if result[0] == "CutLoss":
                         CutLossPrice = result[1]
+
                         time.sleep(2)
                         if "UpdateAct" not in UPDATE_ACT:
                             NOTISTS_INFO += (
                                 "(" + str(COUNT) + ")[= CutLoss(CTS) =]\
                                          \nOrder:/" + order_id + "\
                                          \nCoin:" + coin + "\
-                                        \nNowLastPrice:" + str(float(lastprice)) + "\
+                                         \nLastPrice:" + str(float(lastprice)) + "\
                                          \nRateOrder:" + str(float(rate)) + "\
                                          \nCutLossPrice:" + str(float(CutLossPrice)))
                         if simtest == "yes":
@@ -5083,10 +5263,9 @@ class YourBot(telepot.Bot):
                                             \n|- CutLoss " + coin + " -| \
                                             \nOrder:/" + order_id + \
                                              "\nSale(VL):" + str(float(volumn)) + \
-                                             "\nStart(Rate):" + str(float(rate)) + \
+                                             "\nStartRate:" + str(float(rate)) + \
                                              "\nQty:" + str(float(qty)) + \
                                              "\nSold:" + str(format_floatc(float((CutLossPrice / rate) * qty), 2)) + \
-                                             "\nFee:" + str(fee) + \
                                              "\nProfit:" + str(format_floatc(float(profit_fee), 2)) + " Bath\
                                              \nAccept this Action or not?")
                             # Pause == "NO":
@@ -5143,6 +5322,21 @@ class YourBot(telepot.Bot):
 
                     elif result[0] == "StopLoss":
                         LastPrice = result[1]
+                        StopLoss = result[2]
+                        StopLossinfo = ""
+                        for st in list(StopLoss):
+                            if StopLoss.index(st) + 1 >= len(StopLoss):
+                                if LastPrice > float(st):
+                                    StopLossinfo += "\n==[" + str(st) + "]"
+                                    StopLossinfo += "\n=>[" + str(LastPrice) + "]"
+                                    break
+                            if float(LastPrice) > float(st) and float(LastPrice) <= float(
+                                    StopLoss[StopLoss.index(st) + 1]):
+                                StopLossinfo += "\n=>[" + str(st) + "]"
+                                continue
+                            else:
+                                StopLossinfo += "\n==[" + str(st) + "]"
+                                continue
                         time.sleep(2)
                         if "UpdateAct" not in UPDATE_ACT:
                             NOTISTS_INFO += (
@@ -5189,15 +5383,14 @@ class YourBot(telepot.Bot):
                             fee = 0.0025
                             profit_fee = (profit - (profit * fee))
                             NOTISTS_INFO += ("\n---------------------\
-                                            \n"+emoji.emojize(':exclamation:')+"Please Take Action StopLoss(CTS) Noww !!\
-                                            \n|--StopLoss " + coin + " --| \
+                                            \n""Take Action StopLoss(CTS) Noww !!\
+                                            \nStopPoint[=>]" +str(StopLossinfo) + " \
                                             \nOrder:/" + order_id + \
-                                             "\nSale Volumn:" + str(float(volumn)) + \
-                                             "\nRate Start:" + str(float(rate)) + \
-                                             "\nQty:" + str(float(qty)) + \
-                                             "\nSold:" + str(format_floatc(float((LastPrice / rate) * qty), 2)) + \
-                                             "\nChange Fee:" + str(fee) + \
-                                             "\nProfit:" + str(format_floatc(profit_fee, 2)) + " Bath\
+                                            "\nSaleVolumn:" + str(float(volumn)) + \
+                                            "\nRateStart:" + str(float(rate)) + \
+                                            "\nQty:" + str(float(qty)) + \
+                                            "\nSold:" + str(format_floatc(float((LastPrice / rate) * qty), 2)) + \
+                                            "\nProfit:" + str(format_floatc(profit_fee, 2)) + "\
                                              \nAccept this Action or not?")
                             #if Pause == "NO":
                                # bot.sendMessage(chat_id, NOTISTS_INFO)
@@ -5254,6 +5447,124 @@ class YourBot(telepot.Bot):
                                bot.sendMessage(chat_id, ""+emoji.emojize(':heavy_check_mark:')+"Update Status Close =>" + CK)
                             bot.sendMessage(chat_id,"Exchange Error =>"+str(ST))
                             continue
+                    elif result[0] == "PriceDownOverStopLoss":
+                        LastPrice = result[1]
+                        StopLoss = result[2]
+                        StopLossinfo = ""
+                        for st in list(StopLoss):
+                            if StopLoss.index(st) + 1 >= len(StopLoss):
+                                if LastPrice > float(st):
+                                    StopLossinfo += "\n==[" + str(st) + "]"
+                                    StopLossinfo += "\n=>[" + str(LastPrice) + "]"
+                                    break
+                            if float(LastPrice) > float(st) and float(LastPrice) <= float(
+                                    StopLoss[StopLoss.index(st) + 1]):
+                                StopLossinfo += "\n=>[" + str(st) + "]"
+                                continue
+                            else:
+                                StopLossinfo += "\n==[" + str(st) + "]"
+                                continue
+                        print("StopLossInfo" + str(StopLossinfo))
+                        time.sleep(2)
+                        NOTISTS_INFO += (
+                            "\n(" + str(COUNT) + ")[Price Upper than StopPoint(CTS)]\
+                                            \nOrder:/" + order_id + "\
+                                            \nCoin:" + coin + "\
+                                            \nPrice:" + str(float(LastPrice)))
+                        profit = (((LastPrice / rate) * qty) - qty)
+                        fee = 0.0025
+                        profit_fee = (profit - (profit * fee))
+                        NOTISTS_INFO += ("\n--------------------- \
+                                \nPrice Upper than StopPoint\
+                                \nStopPoint[=>]"+str(StopLossinfo) + "\
+                                \nBuy:" + str(float(qty)) + \
+                                         "\nSold:" + str(format_floatc(((LastPrice / rate) * qty), 2)) + "\
+                                \nProfit " + str(format_floatc(profit_fee, 2)) + " \
+                                \nAccept this Action or not?")
+                        # if Pause == "NO":
+                        # bot.sendMessage(chat_id, NOTIBTS_INFO)
+                        self.buysellaction(chat_id, NOTISTS_INFO, order_id, 'sell')
+                        COUNT += 1
+                        NOTISTS_INFO = ""
+                        time.sleep(10)
+                    elif result[0] == "PriceDownStopLoss":
+                        LastPrice = result[1]
+                        StopLoss = result[2]
+                        StopLossinfo = ""
+                        for st in list(StopLoss):
+                            if StopLoss.index(st) + 1 >= len(StopLoss):
+                                if LastPrice > float(st):
+                                    StopLossinfo += "\n==[" + str(st) + "]"
+                                    StopLossinfo += "\n=>[" + str(LastPrice) + "]"
+                                    break
+                            if float(LastPrice) > float(st) and float(LastPrice) <= float(
+                                    StopLoss[StopLoss.index(st) + 1]):
+                                StopLossinfo += "\n=>[" + str(st) + "]"
+                                continue
+                            else:
+                                StopLossinfo += "\n==[" + str(st) + "]"
+                                continue
+                        time.sleep(2)
+                        NOTISTS_INFO += (
+                            "\n(" + str(COUNT) + ")[Price Lower than StopLoss(CTS)]\
+                                                \nOrder:/" + order_id + "\
+                                                \nCoin:" + coin + "\
+                                                \nPrice:" + str(float(LastPrice)))
+                        profit = (((LastPrice / rate) * qty) - qty)
+                        fee = 0.0025
+                        profit_fee = (profit - (profit * fee))
+                        NOTISTS_INFO += ("\n--------------------- \
+                                    \nPrice Lower than StopLoss \
+                                    \nStopPoint[=>]"+str(StopLossinfo) + "\
+                                    \nBuy:" + str(float(qty)) + "\
+                                    \nSold:" + str(format_floatc(((LastPrice / rate) * qty), 2)) + "\
+                                    \nProfit " + str(format_floatc(profit_fee, 2)) + " \
+                                    \nAccept this Action or not?")
+                        # if Pause == "NO":
+                        # bot.sendMessage(chat_id, NOTIBTS_INFO)
+                        self.buysellaction(chat_id, NOTISTS_INFO, order_id, 'sell')
+                        COUNT += 1
+                        NOTISTS_INFO = ""
+                        time.sleep(10)
+                    elif result[0] == "PriceDownBuyRate":
+                        LastPrice = result[1]
+                        StopLoss = result[2]
+                        StopLossinfo = ""
+                        for st in list(StopLoss):
+                            if StopLoss.index(st) + 1 >= len(StopLoss):
+                                if LastPrice > float(st):
+                                    StopLossinfo += "\n==[" + str(st) + "]"
+                                    StopLossinfo += "\n=>[" + str(LastPrice) + "]"
+                                    break
+                            if float(LastPrice) > float(st) and float(LastPrice) <= float(
+                                    StopLoss[StopLoss.index(st) + 1]):
+                                StopLossinfo += "\n=>[" + str(st) + "]"
+                                continue
+                            else:
+                                StopLossinfo += "\n==[" + str(st) + "]"
+                                continue
+                        time.sleep(2)
+                        NOTISTS_INFO += (
+                            "\n(" + str(COUNT) + ")[Price near StartRate(CTS)]\
+                                                \nOrder:/" + order_id + "\
+                                                \nCoin:" + coin + "\
+                                                \nPrice:" + str(float(LastPrice)))
+                        profit = (((LastPrice / rate) * qty) - qty)
+                        fee = 0.0025
+                        profit_fee = (profit - (profit * fee))
+                        NOTISTS_INFO += ("\n--------------------- \
+                                    \nPrice near to StartRate \
+                                    \nStopPoint[=>]" + str(StopLossinfo) + "\
+                                    \nBuy:" + str(float(qty)) + \
+                                         "\nSold:" + str(format_floatc(((LastPrice / rate) * qty), 2)) + "\
+                                    \nProfit " + str(format_floatc(profit_fee, 2)) + "Bath \
+                                    \nAccept this Action or not?")
+                        # if Pause == "NO":
+                        # bot.sendMessage(chat_id, NOTIBTS_INFO)
+                        self.buysellaction(chat_id, NOTISTS_INFO, order_id, 'sell')
+                        COUNT += 1
+                        NOTISTS_INFO = ""
+                        time.sleep(10)
                 else:
                     print("Not Found Result trailling  !!")
                     continue
@@ -5427,6 +5738,7 @@ class YourBot(telepot.Bot):
                                         \nApply --> Completed ", reply_markup=mainmenu)
                             STRATEGY.clear()
                             CKLOSS.clear()
+                            self.clear_state()
                         else:
                             bot.sendMessage(chat_id,
                                             "" + emoji.emojize(':heavy_check_mark:') + "Mode Auto,Apply BTS \
@@ -5437,6 +5749,7 @@ class YourBot(telepot.Bot):
                         ## Sync Balance with Exchange ##
                         STRATEGY.clear()
                         CKLOSS.clear()
+                        self.clear_state()
                     else:
                         bot.sendMessage(chat_id,
                                         "!! Apply Strategy Trailing Stop to Order Buy " + order_id + "--> Failed !! ")
@@ -5547,6 +5860,8 @@ class YourBot(telepot.Bot):
                                         \nApply --> Completed ", reply_markup=mainmenu)
                             STRATEGY.clear()
                             CKLOSS.clear()
+                            self.clear_state()
+                            ##T1234
                         else:
                             bot.sendMessage(chat_id,
                                             "" + emoji.emojize(':heavy_check_mark:') + "Mode Auto,Apply CTS \
@@ -5557,6 +5872,7 @@ class YourBot(telepot.Bot):
 
                         STRATEGY.clear()
                         CKLOSS.clear()
+                        self.clear_state()
                     else:
                         bot.sendMessage(chat_id,
                                         "!! Apply Strategy Trailing Stop to Order Sell " + order_id + "--> Failed !! ")
@@ -5632,6 +5948,7 @@ class YourBot(telepot.Bot):
                                             \nApply --> Completed ", reply_markup=mainmenu)
                             STRATEGY.clear()
                             CKLOSS.clear()
+                            self.clear_state()
                         else:
                             bot.sendMessage(chat_id,
                                             "" + emoji.emojize(':heavy_check_mark:') + "Mode Auto,Apply BTS \
@@ -5642,6 +5959,7 @@ class YourBot(telepot.Bot):
                         ## Sync Balance with Exchange ##
                         STRATEGY.clear()
                         CKLOSS.clear()
+                        self.clear_state()
 
                     else:
                         bot.sendMessage(chat_id,
@@ -6338,7 +6656,7 @@ print('Listening ...')
 if __name__ == '__main__':
     while True:
         if STRATEGY_CHECK == "ON":
-            simtest = "yes"
+            #simtest = "yes"
             for adminid in adminchatid:
                 print("ChatID:"+str(adminid))
                 blsck = mp.Process(target=bot.bls, args=('bxinth', adminid))
